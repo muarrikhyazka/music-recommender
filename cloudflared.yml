@@ -1,0 +1,52 @@
+tunnel: music-recommender
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # Main application routes
+  - hostname: music-recommender.yourdomain.com
+    service: http://localhost:3000
+    originRequest:
+      httpHostHeader: music-recommender.yourdomain.com
+      originServerName: music-recommender.yourdomain.com
+  
+  # API routes
+  - hostname: api.music-recommender.yourdomain.com  
+    service: http://localhost:3001
+    originRequest:
+      httpHostHeader: api.music-recommender.yourdomain.com
+      originServerName: api.music-recommender.yourdomain.com
+      
+  # Metrics and monitoring (optional - secure this properly)
+  - hostname: metrics.music-recommender.yourdomain.com
+    service: http://localhost:3001
+    path: /api/metrics/*
+    originRequest:
+      httpHostHeader: metrics.music-recommender.yourdomain.com
+  
+  # WebSocket support for real-time features (future use)
+  - hostname: ws.music-recommender.yourdomain.com
+    service: http://localhost:3001
+    originRequest:
+      noTLSVerify: false
+      
+  # Catch-all rule (required)
+  - service: http_status:404
+
+# Additional tunnel configuration
+logLevel: info
+transport-protocol: quic
+
+# Auto-update cloudflared
+no-autoupdate: false
+
+# Metrics
+metrics: localhost:9090
+
+# Proxy settings for better performance  
+proxy-connect-timeout: 30s
+proxy-tls-timeout: 30s
+proxy-tcp-keepalive: 30s
+proxy-no-happy-eyeballs: false
+
+# Compression
+compression: gzip

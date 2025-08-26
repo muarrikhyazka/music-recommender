@@ -1,0 +1,44 @@
+[Unit]
+Description=Music Recommender Application
+Documentation=https://github.com/yourusername/music-recommender
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=ubuntu
+Group=docker
+WorkingDirectory=/home/ubuntu/music-recommender
+Environment=NODE_ENV=production
+Environment=DOCKER_BUILDKIT=1
+Environment=COMPOSE_DOCKER_CLI_BUILD=1
+
+# Commands to run
+ExecStartPre=-/usr/local/bin/docker-compose down
+ExecStart=/usr/local/bin/docker-compose up -d --build
+ExecStop=/usr/local/bin/docker-compose down
+ExecReload=/usr/local/bin/docker-compose restart
+
+# Restart policy
+Restart=on-failure
+RestartSec=30
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/ubuntu/music-recommender
+
+# Timeout settings
+TimeoutStartSec=300
+TimeoutStopSec=30
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
