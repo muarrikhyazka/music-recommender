@@ -1,6 +1,6 @@
 [Unit]
-Description=Music Recommender Application
-Documentation=https://github.com/yourusername/music-recommender
+Description=Munder Application
+Documentation=https://github.com/yourusername/munder
 After=network-online.target docker.service
 Wants=network-online.target
 Requires=docker.service
@@ -10,7 +10,7 @@ Type=oneshot
 RemainAfterExit=yes
 User=ubuntu
 Group=docker
-WorkingDirectory=/home/ubuntu/music-recommender
+WorkingDirectory=/home/ubuntu/munder
 Environment=NODE_ENV=production
 Environment=DOCKER_BUILDKIT=1
 Environment=COMPOSE_DOCKER_CLI_BUILD=1
@@ -30,7 +30,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/home/ubuntu/music-recommender
+ReadWritePaths=/home/ubuntu/munder
 
 # Timeout settings
 TimeoutStartSec=300

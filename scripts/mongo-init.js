@@ -1,10 +1,10 @@
-// MongoDB initialization script for Music Recommender
+// MongoDB initialization script for Munder
 // This script runs when the MongoDB container starts for the first time
 
-print('🎵 Initializing Music Recommender Database...');
+print('🎵 Initializing Munder Database...');
 
 // Switch to the application database
-db = db.getSiblingDB(process.env.MONGO_INITDB_DATABASE || 'music-recommender');
+db = db.getSiblingDB(process.env.MONGO_INITDB_DATABASE || 'munder');
 
 print('📝 Creating application user...');
 
@@ -15,7 +15,7 @@ db.createUser({
   roles: [
     {
       role: 'readWrite',
-      db: process.env.MONGO_INITDB_DATABASE || 'music-recommender'
+      db: process.env.MONGO_INITDB_DATABASE || 'munder'
     }
   ]
 });
@@ -206,4 +206,4 @@ db.recommendationrules.insertMany([
 ]);
 
 print('✅ Database initialization completed successfully!');
-print('🎵 Music Recommender is ready to rock!');
+print('🎵 Munder is ready to rock!');

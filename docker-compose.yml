@@ -4,19 +4,19 @@ services:
   # MongoDB Database
   mongodb:
     image: mongo:7
-    container_name: music-recommender-db
+    container_name: munder-db
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-music-recommender}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-munder}
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
       - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
-      - music-recommender-network
+      - munder-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
@@ -26,7 +26,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: music-recommender-redis
+    container_name: munder-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     ports:
@@ -34,7 +34,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - music-recommender-network
+      - munder-network
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 30s
@@ -46,7 +46,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: music-recommender-api
+    container_name: munder-api
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -71,7 +71,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - music-recommender-network
+      - munder-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
@@ -86,14 +86,14 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         REACT_APP_API_URL: ${REACT_APP_API_URL:-/api}
-    container_name: music-recommender-web
+    container_name: munder-web
     restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:
       - backend
     networks:
-      - music-recommender-network
+      - munder-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
@@ -103,7 +103,7 @@ services:
   # Nginx Reverse Proxy (optional - for load balancing)
   nginx:
     image: nginx:alpine
-    container_name: music-recommender-nginx
+    container_name: munder-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -115,7 +115,7 @@ services:
       - frontend
       - backend
     networks:
-      - music-recommender-network
+      - munder-network
     profiles:
       - with-nginx
 
@@ -126,5 +126,5 @@ volumes:
     driver: local
 
 networks:
-  music-recommender-network:
+  munder-network:
     driver: bridge

@@ -1,4 +1,4 @@
-tunnel: music-recommender
+tunnel: munder
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:

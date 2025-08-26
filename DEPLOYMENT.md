@@ -1,6 +1,6 @@
-# 🎵 Music Recommender - Deployment Guide
+# 🎵 Munder - Deployment Guide
 
-This guide explains how to deploy the Music Recommender system to your Ubuntu mini PC with Cloudflare Tunnel.
+This guide explains how to deploy the Munder system to your Ubuntu mini PC with Cloudflare Tunnel.
 
 ## 📋 Prerequisites
 
@@ -20,8 +20,8 @@ This guide explains how to deploy the Music Recommender system to your Ubuntu mi
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/music-recommender.git
-cd music-recommender
+git clone https://github.com/yourusername/munder.git
+cd munder
 ```
 
 ### 2. Run Deployment Script
@@ -93,7 +93,7 @@ sudo systemctl start music-recommender
 sudo systemctl start cloudflared
 
 # Check status
-sudo systemctl status music-recommender
+sudo systemctl status munder
 sudo systemctl status cloudflared
 ```
 
@@ -121,11 +121,11 @@ sudo dpkg -i cloudflared-linux-amd64.deb
 ### 2. Set Up Application
 ```bash
 # Create application directory
-sudo mkdir -p /home/$(whoami)/music-recommender
-cd /home/$(whoami)/music-recommender
+sudo mkdir -p /home/$(whoami)/munder
+cd /home/$(whoami)/munder
 
 # Clone repository
-git clone https://github.com/yourusername/music-recommender.git .
+git clone https://github.com/yourusername/munder.git .
 
 # Copy environment file
 cp .env.production .env
@@ -136,7 +136,7 @@ nano .env  # Edit with your configuration
 ```bash
 # Create tunnel
 cloudflared tunnel login
-cloudflared tunnel create music-recommender
+cloudflared tunnel create munder
 
 # Copy configuration
 sudo cp cloudflared.yml /etc/cloudflared/config.yml
@@ -159,12 +159,12 @@ docker-compose logs -f
 ### 5. Configure Systemd
 ```bash
 # Copy service file
-sudo cp deployment/systemd/music-recommender.service /etc/systemd/system/
+sudo cp deployment/systemd/munder.service /etc/systemd/system/
 
 # Enable and start
 sudo systemctl daemon-reload
-sudo systemctl enable music-recommender
-sudo systemctl start music-recommender
+sudo systemctl enable munder
+sudo systemctl start munder
 ```
 
 ## 🔍 Monitoring & Maintenance
@@ -178,7 +178,7 @@ curl https://api.your-domain.com/health
 docker-compose ps
 
 # System services
-sudo systemctl status music-recommender
+sudo systemctl status munder
 sudo systemctl status cloudflared
 ```
 
@@ -188,7 +188,7 @@ sudo systemctl status cloudflared
 docker-compose logs -f
 
 # System logs
-sudo journalctl -u music-recommender -f
+sudo journalctl -u munder -f
 sudo journalctl -u cloudflared -f
 
 # Container logs
@@ -212,14 +212,14 @@ cat /home/$(whoami)/music-recommender/logs/backup.log
 ### Updates
 ```bash
 # Pull latest changes
-cd /home/$(whoami)/music-recommender
+cd /home/$(whoami)/munder
 git pull origin main
 
 # Rebuild and restart
 docker-compose up -d --build
 
 # Restart systemd service
-sudo systemctl restart music-recommender
+sudo systemctl restart munder
 ```
 
 ## 🔒 Security Considerations

@@ -1,5 +1,5 @@
 {
-  "name": "music-recommender",
+  "name": "munder",
   "version": "1.0.0",
   "description": "Context-aware music recommendation system with Spotify integration",
   "main": "server/index.js",

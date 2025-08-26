@@ -11,7 +11,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🎵 Music Recommender Deployment Script${NC}"
+echo -e "${GREEN}🎵 Munder Deployment Script${NC}"
 echo "========================================"
 
 # Check if running as root
@@ -21,7 +21,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Configuration
-APP_NAME="music-recommender"
+APP_NAME="munder"
 APP_DIR="/home/$(whoami)/${APP_NAME}"
 SYSTEMD_DIR="/etc/systemd/system"
 CLOUDFLARED_DIR="/etc/cloudflared"
@@ -101,9 +101,9 @@ setup_environment() {
 NODE_ENV=production
 
 # Database
-MONGO_ROOT_USERNAME=musicrecommender
+MONGO_ROOT_USERNAME=munder
 MONGO_ROOT_PASSWORD=$(openssl rand -base64 32)
-MONGO_DATABASE=music-recommender
+MONGO_DATABASE=munder
 
 # Redis
 REDIS_PASSWORD=$(openssl rand -base64 32)
@@ -212,7 +212,7 @@ setup_systemd_services() {
     # Docker compose service
     cat > /tmp/${APP_NAME}.service << EOF
 [Unit]
-Description=Music Recommender Application
+Description=Munder Application
 Requires=docker.service
 After=docker.service
 
@@ -254,15 +254,15 @@ setup_maintenance() {
     # Create backup script
     cat > "${APP_DIR}/backup.sh" << EOF
 #!/bin/bash
-# Backup script for Music Recommender
+# Backup script for Munder
 BACKUP_DIR="/home/$(whoami)/backups/${APP_NAME}"
 DATE=\$(date +%Y%m%d_%H%M%S)
 
 mkdir -p "\${BACKUP_DIR}"
 
 # Backup database
-docker exec music-recommender-db mongodump --out /tmp/backup_\${DATE}
-docker cp music-recommender-db:/tmp/backup_\${DATE} "\${BACKUP_DIR}/mongodb_\${DATE}"
+docker exec munder-db mongodump --out /tmp/backup_\${DATE}
+docker cp munder-db:/tmp/backup_\${DATE} "\${BACKUP_DIR}/mongodb_\${DATE}"
 
 # Backup environment and configs
 cp "${APP_DIR}/.env" "\${BACKUP_DIR}/env_\${DATE}"

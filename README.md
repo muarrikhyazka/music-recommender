@@ -1,4 +1,4 @@
-# Music Recommender - Context-Aware Playlist Generator
+# Munder - Context-Aware Music Recommendation System
 
 A context-aware music recommendation system that creates personalized Spotify playlists based on time, location, weather, and listening history.
 
@@ -42,7 +42,7 @@ A context-aware music recommendation system that creates personalized Spotify pl
 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd music-recommender
+cd munder
 ```
 
 2. Install dependencies
