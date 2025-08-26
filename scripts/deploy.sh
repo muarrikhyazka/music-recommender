@@ -49,10 +49,17 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null; then
+    # Check if Docker Compose is installed (check both old and new format)
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
         log_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
+    fi
+    
+    # Set Docker Compose command based on what's available
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+    else
+        DOCKER_COMPOSE_CMD="docker compose"
     fi
     
     # Check if user is in docker group
@@ -178,22 +185,22 @@ deploy_application() {
     cd "${APP_DIR}"
     
     log_info "Building Docker images..."
-    docker-compose build --no-cache
+    ${DOCKER_COMPOSE_CMD} build --no-cache
     
     log_info "Starting services..."
-    docker-compose up -d
+    ${DOCKER_COMPOSE_CMD} up -d
     
     # Wait for services to be healthy
     log_info "Waiting for services to be ready..."
     sleep 30
     
     # Check service health
-    if docker-compose ps | grep -q "Up (healthy)"; then
+    if ${DOCKER_COMPOSE_CMD} ps | grep -q "Up (healthy)"; then
         log_info "Services started successfully ✅"
     else
         log_error "Some services failed to start properly"
-        docker-compose ps
-        docker-compose logs
+        ${DOCKER_COMPOSE_CMD} ps
+        ${DOCKER_COMPOSE_CMD} logs
         exit 1
     fi
 }
@@ -213,8 +220,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=${APP_DIR}
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=${DOCKER_COMPOSE_CMD} up -d
+ExecStop=${DOCKER_COMPOSE_CMD} down
 TimeoutStartSec=0
 User=$(whoami)
 Group=docker
@@ -294,12 +301,12 @@ print_final_instructions() {
     echo "   - Update domain names"
     echo
     echo "3. Check service status:"
-    echo "   - docker-compose ps"
+    echo "   - ${DOCKER_COMPOSE_CMD} ps"
     echo "   - sudo systemctl status ${APP_NAME}"
     echo "   - sudo systemctl status cloudflared"
     echo
     echo "4. View logs:"
-    echo "   - Application: docker-compose logs -f"
+    echo "   - Application: ${DOCKER_COMPOSE_CMD} logs -f"
     echo "   - System: sudo journalctl -u ${APP_NAME} -f"
     echo
     echo "5. Access your application:"
