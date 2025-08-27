@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Context } from '../types';
-import apiService from '../services/api';
-import locationService, { LocationData } from '../utils/location';
+import { Context } from '../types/index.ts';
+import apiService from '../services/api.ts';
+import locationService, { LocationData } from '../utils/location.ts';
 import { useAuth } from './AuthContext.tsx';
 import toast from 'react-hot-toast';
 
