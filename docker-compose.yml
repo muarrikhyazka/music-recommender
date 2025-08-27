@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
@@ -62,7 +60,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-https://music-recommender.yourdomain.com}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
-      - "3001:3001"
+      - "3002:3001"
     volumes:
       - ./logs:/app/logs
     depends_on:
