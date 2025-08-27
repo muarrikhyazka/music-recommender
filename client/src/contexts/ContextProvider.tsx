@@ -197,10 +197,10 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({ child
   );
 };
 
-export const useContext = (): ContextProviderType => {
+export const useAppContext = (): ContextProviderType => {
   const context = useContext(ContextContext);
   if (context === undefined) {
-    throw new Error('useContext must be used within a ContextProvider');
+    throw new Error('useAppContext must be used within a ContextProvider');
   }
   return context;
 };
