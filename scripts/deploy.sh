@@ -114,7 +114,7 @@ JWT_SECRET=$(openssl rand -base64 64)
 # Spotify API (REQUIRED - Get from https://developer.spotify.com)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=https://music-recommender.yourdomain.com/auth/callback
+SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/auth/callback
 
 # Weather API (Get from https://openweathermap.org/api)
 WEATHER_API_KEY=your_openweather_api_key
@@ -123,7 +123,7 @@ WEATHER_API_KEY=your_openweather_api_key
 GEOIP_API_KEY=your_geoip_api_key
 
 # Frontend URL
-FRONTEND_URL=https://music-recommender.yourdomain.com
+FRONTEND_URL=https://munder.myghty.cloud
 REACT_APP_API_URL=/api
 
 # Logging

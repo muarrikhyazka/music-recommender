@@ -57,7 +57,7 @@ services:
       SPOTIFY_REDIRECT_URI: ${SPOTIFY_REDIRECT_URI}
       WEATHER_API_KEY: ${WEATHER_API_KEY}
       GEOIP_API_KEY: ${GEOIP_API_KEY}
-      FRONTEND_URL: ${FRONTEND_URL:-https://music-recommender.yourdomain.com}
+      FRONTEND_URL: ${FRONTEND_URL:-https://munder.myghty.cloud}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "3002:3001"

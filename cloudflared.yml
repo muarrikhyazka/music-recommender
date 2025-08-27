@@ -3,28 +3,28 @@ credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
   # Main application routes
-  - hostname: music-recommender.yourdomain.com
+  - hostname: munder.myghty.cloud
     service: http://localhost:3000
     originRequest:
-      httpHostHeader: music-recommender.yourdomain.com
-      originServerName: music-recommender.yourdomain.com
+      httpHostHeader: munder.myghty.cloud
+      originServerName: munder.myghty.cloud
   
   # API routes
-  - hostname: api.music-recommender.yourdomain.com  
+  - hostname: api.munder.myghty.cloud  
     service: http://localhost:3001
     originRequest:
-      httpHostHeader: api.music-recommender.yourdomain.com
-      originServerName: api.music-recommender.yourdomain.com
+      httpHostHeader: api.munder.myghty.cloud
+      originServerName: api.munder.myghty.cloud
       
   # Metrics and monitoring (optional - secure this properly)
-  - hostname: metrics.music-recommender.yourdomain.com
+  - hostname: metrics.munder.myghty.cloud
     service: http://localhost:3001
     path: /api/metrics/*
     originRequest:
-      httpHostHeader: metrics.music-recommender.yourdomain.com
+      httpHostHeader: metrics.munder.myghty.cloud
   
   # WebSocket support for real-time features (future use)
-  - hostname: ws.music-recommender.yourdomain.com
+  - hostname: ws.munder.myghty.cloud
     service: http://localhost:3001
     originRequest:
       noTLSVerify: false
