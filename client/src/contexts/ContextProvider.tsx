@@ -2,14 +2,15 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Context } from '../types/index';
 // import { apiService } from '../services/api'; // Temporarily disabled for build
 // import locationService, { LocationData } from '../utils/location'; // Temporarily disabled
+import { useAuth } from './AuthContext.tsx';
+import toast from 'react-hot-toast';
+
 interface LocationData {
   latitude: number;
   longitude: number;
   city?: string;
   country?: string;
 }
-import { useAuth } from './AuthContext.tsx';
-import toast from 'react-hot-toast';
 
 interface ContextState {
   context: Context | null;
