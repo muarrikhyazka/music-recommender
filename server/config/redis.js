@@ -9,7 +9,21 @@ class RedisClient {
 
   async connect() {
     try {
-      const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+      let redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+      
+      // Fix Redis URL format by encoding password
+      if (redisUrl && redisUrl.includes('://') && redisUrl.includes('@')) {
+        try {
+          const url = new URL(redisUrl);
+          if (url.password) {
+            url.password = encodeURIComponent(url.password);
+            redisUrl = url.toString();
+          }
+        } catch (urlError) {
+          logger.error('Invalid Redis URL format, falling back to localhost');
+          redisUrl = 'redis://localhost:6379';
+        }
+      }
       
       this.client = redis.createClient({
         url: redisUrl,

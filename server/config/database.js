@@ -3,7 +3,17 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    // Encode password in MongoDB URI to handle special characters
+    let mongoUri = process.env.MONGODB_URI;
+    if (mongoUri && mongoUri.includes('://') && mongoUri.includes('@')) {
+      const url = new URL(mongoUri);
+      if (url.password) {
+        url.password = encodeURIComponent(url.password);
+        mongoUri = url.toString();
+      }
+    }
+    
+    const conn = await mongoose.connect(mongoUri, {
       useUnifiedTopology: true,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,

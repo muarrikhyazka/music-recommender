@@ -78,8 +78,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ spotifyId: 1 });
 userSchema.index({ createdAt: -1 });
 
 // Methods

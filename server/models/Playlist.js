@@ -99,7 +99,6 @@ const playlistSchema = new mongoose.Schema({
 
 // Indexes
 playlistSchema.index({ createdBy: 1, createdAt: -1 });
-playlistSchema.index({ spotifyPlaylistId: 1 });
 playlistSchema.index({ 'context.timeOfDay': 1 });
 playlistSchema.index({ 'context.weather': 1 });
 playlistSchema.index({ 'context.location.city': 1 });

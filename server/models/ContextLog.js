@@ -10,13 +10,11 @@ const contextLogSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   timestamp: {
     type: Date,
     required: true,
-    index: true,
     default: Date.now
   },
   timeOfDay: {

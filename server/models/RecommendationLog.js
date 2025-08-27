@@ -10,8 +10,7 @@ const recommendationLogSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   playlistId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -25,8 +24,7 @@ const recommendationLogSchema = new mongoose.Schema({
   deliveredAt: {
     type: Date,
     required: true,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   recommendationType: {
     type: String,

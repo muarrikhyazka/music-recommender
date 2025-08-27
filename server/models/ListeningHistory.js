@@ -10,8 +10,7 @@ const listeningHistorySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   songId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -28,8 +27,7 @@ const listeningHistorySchema = new mongoose.Schema({
   },
   playedAt: {
     type: Date,
-    required: true,
-    index: true
+    required: true
   },
   source: {
     type: String,
@@ -76,7 +74,6 @@ listeningHistorySchema.index({ playlistId: 1 });
 listeningHistorySchema.index({ spotifyTrackId: 1 });
 listeningHistorySchema.index({ 'context.timeOfDay': 1 });
 listeningHistorySchema.index({ 'context.weather': 1 });
-listeningHistorySchema.index({ playedAt: -1 });
 listeningHistorySchema.index({ sessionId: 1 });
 
 // Virtual for completion percentage

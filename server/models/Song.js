@@ -88,7 +88,6 @@ const songSchema = new mongoose.Schema({
 });
 
 // Indexes
-songSchema.index({ spotifyId: 1 });
 songSchema.index({ artist: 1 });
 songSchema.index({ genres: 1 });
 songSchema.index({ moodTags: 1 });
