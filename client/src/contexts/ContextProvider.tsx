@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Context } from '../types';
 import apiService from '../services/api';
 import locationService, { LocationData } from '../utils/location';
-import { useAuth } from './AuthContext';
+import { useAuth } from './AuthContext.tsx';
 import toast from 'react-hot-toast';
 
 interface ContextState {

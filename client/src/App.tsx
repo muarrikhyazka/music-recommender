@@ -3,15 +3,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext.tsx';
 import { ContextProvider } from './contexts/ContextProvider.tsx';
-import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-import DashboardPage from './pages/DashboardPage';
-import PlaylistsPage from './pages/PlaylistsPage';
-import StatsPage from './pages/StatsPage';
-import SettingsPage from './pages/SettingsPage';
-import LoadingSpinner from './components/LoadingSpinner';
+import Layout from './components/Layout.tsx';
+import HomePage from './pages/HomePage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import AuthCallbackPage from './pages/AuthCallbackPage.tsx';
+import DashboardPage from './pages/DashboardPage.tsx';
+import PlaylistsPage from './pages/PlaylistsPage.tsx';
+import StatsPage from './pages/StatsPage.tsx';
+import SettingsPage from './pages/SettingsPage.tsx';
+import LoadingSpinner from './components/LoadingSpinner.tsx';
 import './index.css';
 
 // Protected Route component
