@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-simplepass123}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-munder}
     ports:
       - "27018:27017"
@@ -26,7 +26,7 @@ services:
     image: redis:7-alpine
     container_name: munder-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-simplepass123}
     ports:
       - "6380:6379"
     volumes:
@@ -49,8 +49,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/${MONGO_DATABASE:-music-recommender}?authSource=admin
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-simplepass123}@mongodb:27017/${MONGO_DATABASE:-music-recommender}?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-simplepass123}@redis:6379
       JWT_SECRET: ${JWT_SECRET}
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
