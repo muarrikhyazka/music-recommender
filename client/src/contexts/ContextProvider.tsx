@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Context } from '../types';
+import { Context } from '../types/index';
 import { apiService } from '../services/api';
 import locationService, { LocationData } from '../utils/location';
 import { useAuth } from './AuthContext.tsx';
