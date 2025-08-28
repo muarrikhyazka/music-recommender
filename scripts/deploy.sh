@@ -184,6 +184,10 @@ deploy_application() {
     # Build and start containers
     cd "${APP_DIR}"
     
+    # Stop any existing containers first
+    log_info "Stopping existing services..."
+    ${DOCKER_COMPOSE_CMD} down --remove-orphans 2>/dev/null || true
+    
     log_info "Building Docker images..."
     ${DOCKER_COMPOSE_CMD} build --no-cache
     
