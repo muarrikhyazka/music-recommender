@@ -6,7 +6,7 @@ const User = require('../models/User');
 const logger = require('../utils/logger');
 const { authenticate, generateToken } = require('../middleware/auth');
 const rateLimiter = require('../middleware/rateLimiter');
-const { v4: uuidv4 } = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * @route   GET /api/auth/spotify

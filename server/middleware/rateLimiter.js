@@ -38,7 +38,7 @@ const generalLimiter = createRateLimiter(
 // Auth rate limiter (stricter)
 const authLimiter = createRateLimiter(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 requests per windowMs
+  50, // 50 requests per windowMs (increased for testing)
   'Too many authentication attempts, please try again later.',
   true // Skip successful requests
 );
