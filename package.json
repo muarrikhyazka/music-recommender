@@ -30,7 +30,8 @@
     "spotify-web-api-node": "^5.0.2",
     "redis": "^4.6.11",
     "joi": "^17.11.0",
-    "express-rate-limit": "^7.1.5"
+    "express-rate-limit": "^7.1.5",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
