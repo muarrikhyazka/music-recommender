@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState } from '../types/index';
-// import { apiService } from '../services/api'; // Temporarily disabled for build
+import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 
 type AuthAction =
@@ -84,13 +84,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           dispatch({ type: 'SET_LOADING', payload: true });
-          // const response = await apiService.getCurrentUser(); // Stub
-          const response = { data: null };
+          const response = await apiService.get('/auth/me');
           
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: {
-              user: response.user,
+              user: response.data || response,
               token,
             },
           });
@@ -112,9 +111,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       dispatch({ type: 'LOGIN_START' });
       
-      // const response = await apiService.getSpotifyAuthUrl(); // Stub
-      const response = { data: { authUrl: '/auth/spotify' } };
-      window.location.href = response.authUrl;
+      const response = await apiService.get('/auth/spotify');
+      window.location.href = response.authUrl || response.data?.authUrl;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Login failed';
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
