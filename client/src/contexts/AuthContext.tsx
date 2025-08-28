@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState } from '../types/index';
-import { apiService } from '../services/api';
+import { apiService } from '../services/api.ts';
 import toast from 'react-hot-toast';
 
 type AuthAction =
