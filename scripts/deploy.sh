@@ -204,9 +204,13 @@ deploy_application() {
     log_info "Stopping and removing existing services..."
     ${DOCKER_COMPOSE_CMD} down --remove-orphans --volumes 2>/dev/null || true
     
-    # Remove any lingering containers with the same names
-    log_info "Cleaning up any remaining containers..."
+    # Force remove any lingering containers with the same names (this ensures .env changes are loaded)
+    log_info "Force removing any remaining containers to ensure fresh environment..."
     docker rm -f munder-db munder-redis munder-api munder-web munder-nginx 2>/dev/null || true
+    
+    # Remove backend image to force rebuild with new environment variables
+    log_info "Removing backend image to force rebuild..."
+    docker rmi munder-backend music-recommender-backend 2>/dev/null || true
     
     log_info "Building Docker images..."
     ${DOCKER_COMPOSE_CMD} build --no-cache
