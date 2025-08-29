@@ -47,15 +47,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
+// Health check endpoints (both with and without /api prefix)
+const healthHandler = (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // API routes
 app.use('/api/auth', authRoutes);
