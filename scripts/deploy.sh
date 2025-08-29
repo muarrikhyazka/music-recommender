@@ -204,17 +204,24 @@ deploy_application() {
     # Build and start containers
     cd "${APP_DIR}"
     
-    # Stop and remove any existing containers first
-    log_info "Stopping and removing existing services..."
+    # Complete cleanup to ensure fresh deployment with correct environment variables
+    log_info "Performing complete cleanup for fresh deployment..."
+    
+    # Stop all services first
     ${DOCKER_COMPOSE_CMD} down --remove-orphans --volumes 2>/dev/null || true
     
-    # Force remove any lingering containers with the same names (this ensures .env changes are loaded)
-    log_info "Force removing any remaining containers to ensure fresh environment..."
+    # Force remove all containers by name to ensure no cached containers remain
+    log_info "Force removing all application containers..."
     docker rm -f munder-db munder-redis munder-api munder-web munder-nginx 2>/dev/null || true
     
-    # Remove backend image to force rebuild with new environment variables
-    log_info "Removing backend image to force rebuild..."
+    # Remove all related images to force complete rebuild
+    log_info "Removing all application images to force rebuild..."
     docker rmi munder-backend music-recommender-backend 2>/dev/null || true
+    docker rmi munder-frontend music-recommender-frontend 2>/dev/null || true
+    
+    # Clean up any dangling images and build cache
+    log_info "Cleaning up Docker build cache..."
+    docker system prune -f 2>/dev/null || true
     
     log_info "Building Docker images..."
     ${DOCKER_COMPOSE_CMD} build --no-cache
@@ -229,6 +236,18 @@ deploy_application() {
     # Check service health
     if ${DOCKER_COMPOSE_CMD} ps | grep -q "Up (healthy)"; then
         log_info "Services started successfully ✅"
+        
+        # Verify environment variables are loaded correctly
+        log_info "Verifying environment variables..."
+        sleep 5
+        
+        SPOTIFY_CLIENT_ID=$(docker exec munder-api printenv SPOTIFY_CLIENT_ID 2>/dev/null || echo "not_found")
+        if [ "$SPOTIFY_CLIENT_ID" != "your_spotify_client_id" ] && [ "$SPOTIFY_CLIENT_ID" != "not_found" ]; then
+            log_info "✅ Spotify client ID loaded correctly"
+        else
+            log_error "❌ Spotify client ID not loaded correctly: $SPOTIFY_CLIENT_ID"
+            log_error "Please check your .env file in ${APP_DIR}/.env"
+        fi
     else
         log_error "Some services failed to start properly"
         ${DOCKER_COMPOSE_CMD} ps
