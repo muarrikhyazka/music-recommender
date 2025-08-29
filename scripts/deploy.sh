@@ -184,9 +184,13 @@ deploy_application() {
     # Build and start containers
     cd "${APP_DIR}"
     
-    # Stop any existing containers first
-    log_info "Stopping existing services..."
-    ${DOCKER_COMPOSE_CMD} down --remove-orphans 2>/dev/null || true
+    # Stop and remove any existing containers first
+    log_info "Stopping and removing existing services..."
+    ${DOCKER_COMPOSE_CMD} down --remove-orphans --volumes 2>/dev/null || true
+    
+    # Remove any lingering containers with the same names
+    log_info "Cleaning up any remaining containers..."
+    docker rm -f munder-app munder-db munder-redis munder-nginx 2>/dev/null || true
     
     log_info "Building Docker images..."
     ${DOCKER_COMPOSE_CMD} build --no-cache
