@@ -190,7 +190,7 @@ deploy_application() {
     
     # Remove any lingering containers with the same names
     log_info "Cleaning up any remaining containers..."
-    docker rm -f munder-app munder-db munder-redis munder-nginx 2>/dev/null || true
+    docker rm -f munder-db munder-redis munder-api munder-web munder-nginx 2>/dev/null || true
     
     log_info "Building Docker images..."
     ${DOCKER_COMPOSE_CMD} build --no-cache
