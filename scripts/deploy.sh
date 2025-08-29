@@ -178,23 +178,27 @@ setup_cloudflare_tunnel() {
 deploy_application() {
     log_info "Deploying application..."
     
-    # Backup existing .env file to temp location
+    # Preserve production .env file by moving it out of the way
     TEMP_ENV_FILE=""
     if [ -f "${APP_DIR}/.env" ]; then
-        log_info "Backing up existing production .env file..."
-        TEMP_ENV_FILE="/tmp/munder_env_backup_$$"
-        cp "${APP_DIR}/.env" "$TEMP_ENV_FILE"
+        log_info "Preserving existing production .env file..."
+        TEMP_ENV_FILE="/tmp/munder_env_backup_$(date +%s)"
+        mv "${APP_DIR}/.env" "$TEMP_ENV_FILE"
+        log_info "Production .env moved to temporary location"
     fi
     
-    # Copy application files
+    # Copy application files (this may include template .env files)
+    log_info "Copying application files..."
     cp -r ./* "${APP_DIR}/"
     
-    # Restore production .env file if backup exists
+    # Remove any .env files that came from the repository and restore production .env
     if [ ! -z "$TEMP_ENV_FILE" ] && [ -f "$TEMP_ENV_FILE" ]; then
-        log_info "Restoring production .env file..."
-        cp "$TEMP_ENV_FILE" "${APP_DIR}/.env"
-        rm -f "$TEMP_ENV_FILE"
-        log_info "Production .env file restored ✅"
+        log_info "Removing repository .env files and restoring production .env..."
+        rm -f "${APP_DIR}/.env" "${APP_DIR}/.env.*" 2>/dev/null || true
+        mv "$TEMP_ENV_FILE" "${APP_DIR}/.env"
+        log_info "Production .env file restored successfully ✅"
+    else
+        log_warn "No existing .env file found - using repository template"
     fi
     
     # Build and start containers
