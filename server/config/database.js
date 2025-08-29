@@ -3,13 +3,19 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    // Encode password in MongoDB URI to handle special characters
+    // Handle MongoDB URI with special characters in password
     let mongoUri = process.env.MONGODB_URI;
+    
+    // If the URI contains credentials, manually encode the password
     if (mongoUri && mongoUri.includes('://') && mongoUri.includes('@')) {
-      const url = new URL(mongoUri);
-      if (url.password) {
-        url.password = encodeURIComponent(url.password);
-        mongoUri = url.toString();
+      // Extract parts manually to handle special characters
+      const [protocol, rest] = mongoUri.split('://');
+      const [credentials, hostAndPath] = rest.split('@');
+      
+      if (credentials.includes(':')) {
+        const [username, password] = credentials.split(':');
+        const encodedPassword = encodeURIComponent(password);
+        mongoUri = `${protocol}://${username}:${encodedPassword}@${hostAndPath}`;
       }
     }
     
