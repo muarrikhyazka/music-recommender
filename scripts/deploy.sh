@@ -192,9 +192,38 @@ deploy_application() {
     
     # Handle .env file restoration or creation
     if [ ! -z "$EXISTING_ENV_CONTENT" ]; then
-        log_info "Restoring existing .env file content..."
-        echo "$EXISTING_ENV_CONTENT" > "${APP_DIR}/.env"
-        log_info "✅ Existing .env content restored"
+        log_info "Found existing .env file. Would you like to:"
+        echo "1) Keep existing .env file (recommended)"
+        echo "2) Create new .env file by pasting content"
+        read -p "Choose option (1 or 2): " ENV_OPTION
+        
+        if [ "$ENV_OPTION" = "2" ]; then
+            log_info "Please paste your complete .env file content below."
+            log_info "Press Ctrl+D when finished (or type 'END_OF_ENV' on a new line):"
+            echo "================================================"
+            
+            # Read multiline input until EOF or END_OF_ENV
+            NEW_ENV_CONTENT=""
+            while IFS= read -r line || [ -n "$line" ]; do
+                if [ "$line" = "END_OF_ENV" ]; then
+                    break
+                fi
+                NEW_ENV_CONTENT="${NEW_ENV_CONTENT}${line}"$'\n'
+            done
+            
+            if [ ! -z "$NEW_ENV_CONTENT" ]; then
+                log_info "Writing new .env file content..."
+                echo "$NEW_ENV_CONTENT" > "${APP_DIR}/.env"
+                log_info "✅ New .env file created successfully"
+            else
+                log_warn "No content provided - restoring existing .env file"
+                echo "$EXISTING_ENV_CONTENT" > "${APP_DIR}/.env"
+            fi
+        else
+            log_info "Restoring existing .env file content..."
+            echo "$EXISTING_ENV_CONTENT" > "${APP_DIR}/.env"
+            log_info "✅ Existing .env content restored"
+        fi
     else
         log_warn "No existing .env found. Would you like to create a .env file by pasting the entire content? (y/n)"
         read -p "> " CREATE_ENV
