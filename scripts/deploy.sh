@@ -178,8 +178,20 @@ setup_cloudflare_tunnel() {
 deploy_application() {
     log_info "Deploying application..."
     
-    # Copy application files
-    cp -r ./* "${APP_DIR}/"
+    # Backup existing .env file if it exists
+    if [ -f "${APP_DIR}/.env" ]; then
+        log_info "Backing up existing .env file..."
+        cp "${APP_DIR}/.env" "${APP_DIR}/.env.backup"
+    fi
+    
+    # Copy application files (excluding .env files to avoid overwriting production config)
+    rsync -av --progress ./ "${APP_DIR}/" --exclude='.env' --exclude='.env.*'
+    
+    # Restore .env file if backup exists
+    if [ -f "${APP_DIR}/.env.backup" ]; then
+        log_info "Restoring production .env file..."
+        mv "${APP_DIR}/.env.backup" "${APP_DIR}/.env"
+    fi
     
     # Build and start containers
     cd "${APP_DIR}"
