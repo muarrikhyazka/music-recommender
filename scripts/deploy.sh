@@ -178,53 +178,93 @@ setup_cloudflare_tunnel() {
 deploy_application() {
     log_info "Deploying application..."
     
-    # Extract and preserve Spotify credentials before copying files
-    SPOTIFY_CLIENT_ID=""
-    SPOTIFY_CLIENT_SECRET=""
-    SPOTIFY_REDIRECT_URI=""
-    
+    # Preserve existing .env file content
+    EXISTING_ENV_CONTENT=""
     if [ -f "${APP_DIR}/.env" ]; then
-        log_info "Extracting existing Spotify credentials..."
-        SPOTIFY_CLIENT_ID=$(grep "^SPOTIFY_CLIENT_ID=" "${APP_DIR}/.env" | cut -d'=' -f2- | tr -d '"' || echo "")
-        SPOTIFY_CLIENT_SECRET=$(grep "^SPOTIFY_CLIENT_SECRET=" "${APP_DIR}/.env" | cut -d'=' -f2- | tr -d '"' || echo "")
-        SPOTIFY_REDIRECT_URI=$(grep "^SPOTIFY_REDIRECT_URI=" "${APP_DIR}/.env" | cut -d'=' -f2- | tr -d '"' || echo "")
-        
-        if [ ! -z "$SPOTIFY_CLIENT_ID" ] && [ "$SPOTIFY_CLIENT_ID" != "your_spotify_client_id" ]; then
-            log_info "✅ Found valid Spotify credentials to preserve"
-        else
-            log_warn "⚠️  No valid Spotify credentials found in existing .env"
-        fi
+        log_info "Backing up existing .env file content..."
+        EXISTING_ENV_CONTENT=$(cat "${APP_DIR}/.env")
+        log_info "✅ Existing .env content backed up"
     fi
     
     # Copy application files (this may overwrite .env)
     log_info "Copying application files..."
     cp -r ./* "${APP_DIR}/"
     
-    # Ensure Spotify credentials are correct - either restore or prompt for input
-    if [ ! -z "$SPOTIFY_CLIENT_ID" ] && [ "$SPOTIFY_CLIENT_ID" != "your_spotify_client_id" ]; then
-        log_info "Restoring Spotify credentials to .env file..."
-        
-        # Update the .env file with correct Spotify credentials
-        sed -i "s/^SPOTIFY_CLIENT_ID=.*/SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}/" "${APP_DIR}/.env"
-        sed -i "s/^SPOTIFY_CLIENT_SECRET=.*/SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}/" "${APP_DIR}/.env"
-        sed -i "s|^SPOTIFY_REDIRECT_URI=.*|SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}|" "${APP_DIR}/.env"
-        
-        log_info "✅ Spotify credentials restored successfully"
+    # Handle .env file restoration or creation
+    if [ ! -z "$EXISTING_ENV_CONTENT" ]; then
+        log_info "Restoring existing .env file content..."
+        echo "$EXISTING_ENV_CONTENT" > "${APP_DIR}/.env"
+        log_info "✅ Existing .env content restored"
     else
-        log_warn "❌ No valid Spotify credentials found. Please enter them manually:"
-        echo
+        log_warn "No existing .env found. Would you like to create a complete .env file interactively? (y/n)"
+        read -p "> " CREATE_ENV
         
-        read -p "Enter your Spotify Client ID: " INPUT_CLIENT_ID
-        read -p "Enter your Spotify Client Secret: " INPUT_CLIENT_SECRET
-        
-        if [ ! -z "$INPUT_CLIENT_ID" ] && [ ! -z "$INPUT_CLIENT_SECRET" ]; then
-            log_info "Updating .env file with provided credentials..."
-            sed -i "s/^SPOTIFY_CLIENT_ID=.*/SPOTIFY_CLIENT_ID=${INPUT_CLIENT_ID}/" "${APP_DIR}/.env"
-            sed -i "s/^SPOTIFY_CLIENT_SECRET=.*/SPOTIFY_CLIENT_SECRET=${INPUT_CLIENT_SECRET}/" "${APP_DIR}/.env"
-            sed -i "s|^SPOTIFY_REDIRECT_URI=.*|SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/api/auth/spotify/callback|" "${APP_DIR}/.env"
-            log_info "✅ Spotify credentials updated successfully"
+        if [ "$CREATE_ENV" = "y" ] || [ "$CREATE_ENV" = "Y" ]; then
+            log_info "Creating .env file interactively..."
+            echo
+            echo "Please provide the following environment variables:"
+            echo "================================================"
+            
+            read -p "SPOTIFY_CLIENT_ID: " SPOTIFY_CLIENT_ID
+            read -p "SPOTIFY_CLIENT_SECRET: " SPOTIFY_CLIENT_SECRET
+            read -p "WEATHER_API_KEY: " WEATHER_API_KEY
+            read -p "MONGO_ROOT_PASSWORD (or press Enter for generated): " MONGO_PASSWORD
+            read -p "REDIS_PASSWORD (or press Enter for generated): " REDIS_PASSWORD
+            read -p "JWT_SECRET (or press Enter for generated): " JWT_SECRET
+            
+            # Generate passwords if not provided
+            if [ -z "$MONGO_PASSWORD" ]; then
+                MONGO_PASSWORD=$(openssl rand -base64 32 2>/dev/null || echo "generated_mongo_password_$(date +%s)")
+            fi
+            if [ -z "$REDIS_PASSWORD" ]; then
+                REDIS_PASSWORD=$(openssl rand -base64 32 2>/dev/null || echo "generated_redis_password_$(date +%s)")
+            fi
+            if [ -z "$JWT_SECRET" ]; then
+                JWT_SECRET=$(openssl rand -base64 64 2>/dev/null || echo "generated_jwt_secret_$(date +%s)")
+            fi
+            
+            # Create complete .env file
+            cat > "${APP_DIR}/.env" << EOF
+# Production Environment Configuration
+NODE_ENV=production
+PORT=3001
+FRONTEND_URL=https://munder.myghty.cloud
+
+# Database Configuration
+MONGO_ROOT_USERNAME=munder
+MONGO_ROOT_PASSWORD=${MONGO_PASSWORD}
+MONGO_DATABASE=munder
+MONGODB_URI=mongodb://munder:${MONGO_PASSWORD}@mongodb:27017/munder?authSource=admin
+
+# Redis Configuration
+REDIS_PASSWORD=${REDIS_PASSWORD}
+REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+
+# Security
+JWT_SECRET=${JWT_SECRET}
+
+# Spotify API Configuration
+SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/api/auth/spotify/callback
+
+# Weather API Configuration
+WEATHER_API_KEY=${WEATHER_API_KEY}
+
+# Frontend Configuration
+REACT_APP_API_URL=/api
+
+# Logging Configuration
+LOG_LEVEL=info
+
+# Rate Limiting Configuration
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+EOF
+            
+            log_info "✅ Complete .env file created successfully"
         else
-            log_error "❌ Invalid credentials provided - deployment will continue with template values"
+            log_warn "Using template .env file - please update manually after deployment"
         fi
     fi
     
