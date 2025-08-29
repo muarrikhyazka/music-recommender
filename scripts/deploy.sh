@@ -178,27 +178,40 @@ setup_cloudflare_tunnel() {
 deploy_application() {
     log_info "Deploying application..."
     
-    # Preserve production .env file by moving it out of the way
-    TEMP_ENV_FILE=""
+    # Extract and preserve Spotify credentials before copying files
+    SPOTIFY_CLIENT_ID=""
+    SPOTIFY_CLIENT_SECRET=""
+    SPOTIFY_REDIRECT_URI=""
+    
     if [ -f "${APP_DIR}/.env" ]; then
-        log_info "Preserving existing production .env file..."
-        TEMP_ENV_FILE="/tmp/munder_env_backup_$(date +%s)"
-        mv "${APP_DIR}/.env" "$TEMP_ENV_FILE"
-        log_info "Production .env moved to temporary location"
+        log_info "Extracting existing Spotify credentials..."
+        SPOTIFY_CLIENT_ID=$(grep "^SPOTIFY_CLIENT_ID=" "${APP_DIR}/.env" | cut -d'=' -f2- | tr -d '"' || echo "")
+        SPOTIFY_CLIENT_SECRET=$(grep "^SPOTIFY_CLIENT_SECRET=" "${APP_DIR}/.env" | cut -d'=' -f2- | tr -d '"' || echo "")
+        SPOTIFY_REDIRECT_URI=$(grep "^SPOTIFY_REDIRECT_URI=" "${APP_DIR}/.env" | cut -d'=' -f2- | tr -d '"' || echo "")
+        
+        if [ ! -z "$SPOTIFY_CLIENT_ID" ] && [ "$SPOTIFY_CLIENT_ID" != "your_spotify_client_id" ]; then
+            log_info "✅ Found valid Spotify credentials to preserve"
+        else
+            log_warn "⚠️  No valid Spotify credentials found in existing .env"
+        fi
     fi
     
-    # Copy application files (this may include template .env files)
+    # Copy application files (this may overwrite .env)
     log_info "Copying application files..."
     cp -r ./* "${APP_DIR}/"
     
-    # Remove any .env files that came from the repository and restore production .env
-    if [ ! -z "$TEMP_ENV_FILE" ] && [ -f "$TEMP_ENV_FILE" ]; then
-        log_info "Removing repository .env files and restoring production .env..."
-        rm -f "${APP_DIR}/.env" "${APP_DIR}/.env.*" 2>/dev/null || true
-        mv "$TEMP_ENV_FILE" "${APP_DIR}/.env"
-        log_info "Production .env file restored successfully ✅"
+    # Force restore Spotify credentials if we had valid ones
+    if [ ! -z "$SPOTIFY_CLIENT_ID" ] && [ "$SPOTIFY_CLIENT_ID" != "your_spotify_client_id" ]; then
+        log_info "Restoring Spotify credentials to .env file..."
+        
+        # Update the .env file with correct Spotify credentials
+        sed -i "s/^SPOTIFY_CLIENT_ID=.*/SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}/" "${APP_DIR}/.env"
+        sed -i "s/^SPOTIFY_CLIENT_SECRET=.*/SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}/" "${APP_DIR}/.env"
+        sed -i "s|^SPOTIFY_REDIRECT_URI=.*|SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}|" "${APP_DIR}/.env"
+        
+        log_info "✅ Spotify credentials restored successfully"
     else
-        log_warn "No existing .env file found - using repository template"
+        log_error "❌ No valid Spotify credentials to restore - please update .env manually"
     fi
     
     # Build and start containers
