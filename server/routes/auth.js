@@ -42,7 +42,7 @@ router.get('/spotify', rateLimiter.auth, (req, res) => {
  * @desc    Handle Spotify OAuth callback
  * @access  Public
  */
-router.get('/callback', rateLimiter.auth, async (req, res) => {
+router.get('/spotify/callback', rateLimiter.auth, async (req, res) => {
   try {
     const { code, state, error } = req.query;
 
