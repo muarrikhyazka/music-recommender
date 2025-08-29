@@ -200,7 +200,7 @@ deploy_application() {
     log_info "Copying application files..."
     cp -r ./* "${APP_DIR}/"
     
-    # Force restore Spotify credentials if we had valid ones
+    # Ensure Spotify credentials are correct - either restore or prompt for input
     if [ ! -z "$SPOTIFY_CLIENT_ID" ] && [ "$SPOTIFY_CLIENT_ID" != "your_spotify_client_id" ]; then
         log_info "Restoring Spotify credentials to .env file..."
         
@@ -211,7 +211,21 @@ deploy_application() {
         
         log_info "✅ Spotify credentials restored successfully"
     else
-        log_error "❌ No valid Spotify credentials to restore - please update .env manually"
+        log_warn "❌ No valid Spotify credentials found. Please enter them manually:"
+        echo
+        
+        read -p "Enter your Spotify Client ID: " INPUT_CLIENT_ID
+        read -p "Enter your Spotify Client Secret: " INPUT_CLIENT_SECRET
+        
+        if [ ! -z "$INPUT_CLIENT_ID" ] && [ ! -z "$INPUT_CLIENT_SECRET" ]; then
+            log_info "Updating .env file with provided credentials..."
+            sed -i "s/^SPOTIFY_CLIENT_ID=.*/SPOTIFY_CLIENT_ID=${INPUT_CLIENT_ID}/" "${APP_DIR}/.env"
+            sed -i "s/^SPOTIFY_CLIENT_SECRET=.*/SPOTIFY_CLIENT_SECRET=${INPUT_CLIENT_SECRET}/" "${APP_DIR}/.env"
+            sed -i "s|^SPOTIFY_REDIRECT_URI=.*|SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/api/auth/spotify/callback|" "${APP_DIR}/.env"
+            log_info "✅ Spotify credentials updated successfully"
+        else
+            log_error "❌ Invalid credentials provided - deployment will continue with template values"
+        fi
     fi
     
     # Build and start containers
