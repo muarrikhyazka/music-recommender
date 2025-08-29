@@ -178,19 +178,23 @@ setup_cloudflare_tunnel() {
 deploy_application() {
     log_info "Deploying application..."
     
-    # Backup existing .env file if it exists
+    # Backup existing .env file to temp location
+    TEMP_ENV_FILE=""
     if [ -f "${APP_DIR}/.env" ]; then
-        log_info "Backing up existing .env file..."
-        cp "${APP_DIR}/.env" "${APP_DIR}/.env.backup"
+        log_info "Backing up existing production .env file..."
+        TEMP_ENV_FILE="/tmp/munder_env_backup_$$"
+        cp "${APP_DIR}/.env" "$TEMP_ENV_FILE"
     fi
     
-    # Copy application files (excluding .env files to avoid overwriting production config)
-    rsync -av --progress ./ "${APP_DIR}/" --exclude='.env' --exclude='.env.*'
+    # Copy application files
+    cp -r ./* "${APP_DIR}/"
     
-    # Restore .env file if backup exists
-    if [ -f "${APP_DIR}/.env.backup" ]; then
+    # Restore production .env file if backup exists
+    if [ ! -z "$TEMP_ENV_FILE" ] && [ -f "$TEMP_ENV_FILE" ]; then
         log_info "Restoring production .env file..."
-        mv "${APP_DIR}/.env.backup" "${APP_DIR}/.env"
+        cp "$TEMP_ENV_FILE" "${APP_DIR}/.env"
+        rm -f "$TEMP_ENV_FILE"
+        log_info "Production .env file restored ✅"
     fi
     
     # Build and start containers
