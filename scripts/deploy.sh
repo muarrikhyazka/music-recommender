@@ -196,73 +196,30 @@ deploy_application() {
         echo "$EXISTING_ENV_CONTENT" > "${APP_DIR}/.env"
         log_info "✅ Existing .env content restored"
     else
-        log_warn "No existing .env found. Would you like to create a complete .env file interactively? (y/n)"
+        log_warn "No existing .env found. Would you like to create a .env file by pasting the entire content? (y/n)"
         read -p "> " CREATE_ENV
         
         if [ "$CREATE_ENV" = "y" ] || [ "$CREATE_ENV" = "Y" ]; then
-            log_info "Creating .env file interactively..."
-            echo
-            echo "Please provide the following environment variables:"
+            log_info "Please paste your complete .env file content below."
+            log_info "Press Ctrl+D when finished (or type 'END_OF_ENV' on a new line):"
             echo "================================================"
             
-            read -p "SPOTIFY_CLIENT_ID: " SPOTIFY_CLIENT_ID
-            read -p "SPOTIFY_CLIENT_SECRET: " SPOTIFY_CLIENT_SECRET
-            read -p "WEATHER_API_KEY: " WEATHER_API_KEY
-            read -p "MONGO_ROOT_PASSWORD (or press Enter for generated): " MONGO_PASSWORD
-            read -p "REDIS_PASSWORD (or press Enter for generated): " REDIS_PASSWORD
-            read -p "JWT_SECRET (or press Enter for generated): " JWT_SECRET
+            # Read multiline input until EOF or END_OF_ENV
+            ENV_CONTENT=""
+            while IFS= read -r line || [ -n "$line" ]; do
+                if [ "$line" = "END_OF_ENV" ]; then
+                    break
+                fi
+                ENV_CONTENT="${ENV_CONTENT}${line}"$'\n'
+            done
             
-            # Generate passwords if not provided
-            if [ -z "$MONGO_PASSWORD" ]; then
-                MONGO_PASSWORD=$(openssl rand -base64 32 2>/dev/null || echo "generated_mongo_password_$(date +%s)")
+            if [ ! -z "$ENV_CONTENT" ]; then
+                log_info "Writing .env file content..."
+                echo "$ENV_CONTENT" > "${APP_DIR}/.env"
+                log_info "✅ Complete .env file created successfully"
+            else
+                log_error "No content provided - using template .env file"
             fi
-            if [ -z "$REDIS_PASSWORD" ]; then
-                REDIS_PASSWORD=$(openssl rand -base64 32 2>/dev/null || echo "generated_redis_password_$(date +%s)")
-            fi
-            if [ -z "$JWT_SECRET" ]; then
-                JWT_SECRET=$(openssl rand -base64 64 2>/dev/null || echo "generated_jwt_secret_$(date +%s)")
-            fi
-            
-            # Create complete .env file
-            cat > "${APP_DIR}/.env" << EOF
-# Production Environment Configuration
-NODE_ENV=production
-PORT=3001
-FRONTEND_URL=https://munder.myghty.cloud
-
-# Database Configuration
-MONGO_ROOT_USERNAME=munder
-MONGO_ROOT_PASSWORD=${MONGO_PASSWORD}
-MONGO_DATABASE=munder
-MONGODB_URI=mongodb://munder:${MONGO_PASSWORD}@mongodb:27017/munder?authSource=admin
-
-# Redis Configuration
-REDIS_PASSWORD=${REDIS_PASSWORD}
-REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-
-# Security
-JWT_SECRET=${JWT_SECRET}
-
-# Spotify API Configuration
-SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/api/auth/spotify/callback
-
-# Weather API Configuration
-WEATHER_API_KEY=${WEATHER_API_KEY}
-
-# Frontend Configuration
-REACT_APP_API_URL=/api
-
-# Logging Configuration
-LOG_LEVEL=info
-
-# Rate Limiting Configuration
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-EOF
-            
-            log_info "✅ Complete .env file created successfully"
         else
             log_warn "Using template .env file - please update manually after deployment"
         fi
