@@ -114,7 +114,7 @@ JWT_SECRET=$(openssl rand -base64 64)
 # Spotify API (REQUIRED - Get from https://developer.spotify.com)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/auth/callback
+SPOTIFY_REDIRECT_URI=https://munder.myghty.cloud/api/auth/spotify/callback
 
 # Weather API (Get from https://openweathermap.org/api)
 WEATHER_API_KEY=your_openweather_api_key
