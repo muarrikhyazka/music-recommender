@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { LoadingSpinner } from '../components';
 
 const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
