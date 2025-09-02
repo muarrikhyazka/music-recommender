@@ -61,10 +61,21 @@ router.get('/spotify/callback', rateLimiter.auth, async (req, res) => {
     }
 
     // Verify state parameter (optional but recommended)
-    const storedState = req.cookies.spotify_auth_state;
+    const storedState = req.cookies?.spotify_auth_state;
     if (state && storedState && state !== storedState) {
+      logger.error('State parameter mismatch', { 
+        providedState: state, 
+        storedState: storedState 
+      });
       return res.status(400).json({
         error: 'Invalid state parameter'
+      });
+    }
+
+    if (state && !storedState) {
+      logger.warn('State parameter provided but no stored state found', { 
+        providedState: state,
+        cookies: req.cookies
       });
     }
 
