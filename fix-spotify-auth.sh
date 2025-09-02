@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fix Spotify Authentication - Install cookie-parser and restart server
+# Fix Spotify Authentication - Install Node.js, cookie-parser and restart server
 # Run this script on your Ubuntu mini PC server
 
 set -e  # Exit on any error
@@ -19,6 +19,28 @@ if [ ! -f "$PROJECT_DIR/package.json" ]; then
     echo "❌ Error: package.json not found in $PROJECT_DIR"
     echo "Make sure this script is in your music-recommender root directory"
     exit 1
+fi
+
+# Check if Node.js and npm are installed
+if ! command -v node > /dev/null 2>&1 || ! command -v npm > /dev/null 2>&1; then
+    echo "📥 Node.js and npm not found. Installing..."
+    
+    # Update package list
+    sudo apt update
+    
+    # Install Node.js and npm using NodeSource repository (LTS version)
+    echo "🌐 Adding NodeSource repository..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    
+    echo "📦 Installing Node.js and npm..."
+    sudo apt-get install -y nodejs
+    
+    # Verify installation
+    echo "✅ Node.js version: $(node --version)"
+    echo "✅ npm version: $(npm --version)"
+else
+    echo "✅ Node.js version: $(node --version)"
+    echo "✅ npm version: $(npm --version)"
 fi
 
 # Install cookie-parser
