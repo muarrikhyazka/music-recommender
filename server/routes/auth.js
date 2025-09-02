@@ -22,6 +22,8 @@ router.get('/spotify', rateLimiter.auth, (req, res) => {
     res.cookie('spotify_auth_state', state, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? '.myghty.cloud' : undefined,
       maxAge: 10 * 60 * 1000 // 10 minutes
     });
 
@@ -46,6 +48,18 @@ router.get('/spotify/callback', rateLimiter.auth, async (req, res) => {
   try {
     const { code, state, error } = req.query;
 
+    // Debug logging for cookies
+    logger.info('Spotify callback received', {
+      hasCode: !!code,
+      hasState: !!state,
+      hasError: !!error,
+      cookies: req.cookies,
+      headers: {
+        cookie: req.headers.cookie,
+        userAgent: req.headers['user-agent']
+      }
+    });
+
     if (error) {
       logger.error('Spotify OAuth error:', error);
       return res.status(400).json({
@@ -62,6 +76,14 @@ router.get('/spotify/callback', rateLimiter.auth, async (req, res) => {
 
     // Verify state parameter (optional but recommended)
     const storedState = req.cookies?.spotify_auth_state;
+    
+    logger.info('State verification', {
+      providedState: state,
+      storedState: storedState,
+      cookieKeys: Object.keys(req.cookies || {}),
+      allCookies: req.cookies
+    });
+    
     if (state && storedState && state !== storedState) {
       logger.error('State parameter mismatch', { 
         providedState: state, 
@@ -77,6 +99,7 @@ router.get('/spotify/callback', rateLimiter.auth, async (req, res) => {
         providedState: state,
         cookies: req.cookies
       });
+      // Don't fail the auth, just log the warning
     }
 
     // Exchange code for tokens
