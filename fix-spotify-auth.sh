@@ -53,7 +53,23 @@ if command -v pm2 > /dev/null 2>&1; then
     pm2 restart all || pm2 start server/index.js --name "music-recommender"
 elif pgrep -f "node.*server/index.js" > /dev/null; then
     echo "🔄 Stopping existing Node.js server..."
-    pkill -f "node.*server/index.js"
+    
+    # Try regular kill first, then sudo if needed
+    if ! pkill -f "node.*server/index.js" 2>/dev/null; then
+        echo "⚠️  Regular kill failed, trying with sudo..."
+        if ! sudo pkill -f "node.*server/index.js" 2>/dev/null; then
+            echo "❌ Could not stop existing process. Please manually stop it:"
+            echo "   ps aux | grep 'node.*server/index.js'"
+            echo "   sudo kill <PID>"
+            echo ""
+            echo "💡 Consider using PM2 for better process management:"
+            echo "   sudo npm install -g pm2"
+            echo "   pm2 start server/index.js --name 'music-recommender'"
+            echo ""
+            read -p "Press Enter after stopping the process manually, or Ctrl+C to exit..."
+        fi
+    fi
+    
     sleep 2
     echo "🚀 Starting server..."
     cd "$PROJECT_DIR" && nohup node server/index.js > server.log 2>&1 &
