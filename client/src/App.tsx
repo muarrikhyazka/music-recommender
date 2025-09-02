@@ -11,7 +11,7 @@ import DashboardPage from './pages/DashboardPage.tsx';
 import PlaylistsPage from './pages/PlaylistsPage.tsx';
 import StatsPage from './pages/StatsPage.tsx';
 import SettingsPage from './pages/SettingsPage.tsx';
-import { LoadingSpinner } from './components';
+import LoadingSpinner from './components/LoadingSpinner.tsx';
 import './index.css';
 
 // Protected Route component
