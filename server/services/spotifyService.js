@@ -492,6 +492,42 @@ class SpotifyService {
   }
 
   /**
+   * Get tracks from a specific playlist
+   */
+  async getPlaylistTracks(accessToken, playlistId, limit = 50, offset = 0) {
+    try {
+      this.spotifyApi.setAccessToken(accessToken);
+      const data = await this.spotifyApi.getPlaylistTracks(playlistId, {
+        limit,
+        offset,
+        fields: 'items(track(id,name,artists(id,name),album(name,images),duration_ms,popularity,uri,external_urls))'
+      });
+      
+      return data.body.items
+        .filter(item => item.track && item.track.id) // Filter out null tracks
+        .map(item => ({
+          id: item.track.id,
+          name: item.track.name,
+          artists: item.track.artists.map(artist => ({
+            id: artist.id,
+            name: artist.name
+          })),
+          album: {
+            name: item.track.album.name,
+            images: item.track.album.images || []
+          },
+          duration: item.track.duration_ms,
+          popularity: item.track.popularity,
+          uri: item.track.uri,
+          externalUrls: item.track.external_urls
+        }));
+    } catch (error) {
+      logger.error('Error getting playlist tracks:', error);
+      throw new Error('Failed to get playlist tracks');
+    }
+  }
+
+  /**
    * Validate and refresh user's Spotify token if needed
    */
   async ensureValidToken(user) {

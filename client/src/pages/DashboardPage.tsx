@@ -283,32 +283,32 @@ const DashboardPage: React.FC = () => {
               { isSection: true, title: 'Discover New Music', id: 'global-section' },
               {
                 id: 'demo1',
-                name: 'Perfect Day - Demo Song',
-                artists: [{ name: 'Demo Artist', id: 'demo-artist1' }],
+                name: 'Blinding Lights',
+                artists: [{ name: 'The Weeknd', id: 'demo-artist1' }],
                 album: { 
-                  name: 'Context Demo', 
+                  name: 'After Hours', 
                   images: [{ 
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFEQjk1NCIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtSBEZW1vPC90ZXh0Pjwvc3ZnPg==' 
+                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFEQjk1NCIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtSBUcmFjazwvdGV4dD48L3N2Zz4=' 
                   }] 
                 },
-                uri: 'https://open.spotify.com/playlist/37i9dQZF1DX0XUsuxWHRQd',
-                duration: 240000,
+                uri: 'https://open.spotify.com/track/0VjIjW4GlUla35mVUg36Ow',
+                duration: 200040,
                 score: 0.95,
                 section: 'global',
                 reasons: [`Perfect for ${mappedContext.timeOfDay}`, `Matches ${mappedContext.weather.condition} weather`]
               },
               {
                 id: 'demo2',
-                name: `${mappedContext.timeOfDay} Vibes`,
-                artists: [{ name: 'Weather Sounds', id: 'demo-artist2' }],
+                name: 'Good as Hell',
+                artists: [{ name: 'Lizzo', id: 'demo-artist2' }],
                 album: { 
-                  name: 'Atmospheric', 
+                  name: 'Cuz I Love You', 
                   images: [{ 
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzYzNjZmMSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtiBNdXNpYzwvdGV4dD48L3N2Zz4=' 
+                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzYzNjZmMSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtiBUcmFjazwvdGV4dD48L3N2Zz4=' 
                   }] 
                 },
-                uri: 'https://open.spotify.com/playlist/37i9dQZF1DXc6IFF23C9jj',
-                duration: 180000,
+                uri: 'https://open.spotify.com/track/4jAIqgrPjKLTY9Gbez25Qb',
+                duration: 219466,
                 score: 0.88,
                 section: 'global',
                 reasons: [`${mappedContext.geoLocation.city} weather`, 'Time-based selection']
@@ -362,7 +362,7 @@ const DashboardPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 py-8">
       <div className="max-w-6xl mx-auto px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">🎵 Munder Dashboard</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">🎵 Munder</h1>
         <p className="text-gray-300">Your personalized music recommendations</p>
       </div>
 
