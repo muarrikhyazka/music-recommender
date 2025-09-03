@@ -21,9 +21,8 @@ router.get('/spotify', rateLimiter.auth, (req, res) => {
     // Store state in session or return to client to verify later
     res.cookie('spotify_auth_state', state, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.myghty.cloud' : undefined,
+      secure: false, // Set to false for HTTP testing
+      sameSite: 'lax',
       maxAge: 10 * 60 * 1000 // 10 minutes
     });
 

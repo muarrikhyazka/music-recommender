@@ -1,8 +1,19 @@
 import React from 'react';
 
 const LoginPage: React.FC = () => {
-  const handleSpotifyLogin = () => {
-    window.location.href = '/api/auth/spotify';
+  const handleSpotifyLogin = async () => {
+    try {
+      const response = await fetch('/api/auth/spotify');
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        console.error('No auth URL received from server');
+      }
+    } catch (error) {
+      console.error('Error initiating Spotify login:', error);
+    }
   };
 
   return (
