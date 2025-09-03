@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/api.ts';
-import locationService from '../utils/location';
-import LoadingSpinner from '../components/LoadingSpinner';
+import locationService from '../utils/location.ts';
+import LoadingSpinner from '../components/LoadingSpinner.tsx';
 
 interface Track {
   id: string;
