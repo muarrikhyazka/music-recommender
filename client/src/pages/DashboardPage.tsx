@@ -272,12 +272,12 @@ const DashboardPage: React.FC = () => {
           
           // Handle errors by showing appropriate messages - no demo data in production
           if (recommendationError.message.includes('401')) {
-            console.log('Authentication required - user needs to authenticate with Spotify');
-            setPlaylistName('Spotify Authentication Required');
-            setError('Please log in with your Spotify account to get personalized recommendations.');
+            console.log('Spotify authentication expired - user needs to re-authenticate');
+            setPlaylistName('Spotify Authentication Expired');
+            setError('Your Spotify session has expired. Please refresh the page and log in again to get recommendations.');
           } else if (recommendationError.message.includes('403')) {
-            setPlaylistName('Premium Required');
-            setError('Spotify Premium subscription required for full recommendations.');
+            setPlaylistName('Spotify Connection Required');
+            setError('Please connect your Spotify account to get personalized recommendations. Click the login button to authenticate.');
           } else if (recommendationError.message.includes('429')) {
             setPlaylistName('Rate Limit Reached');
             setError('Too many requests. Please try again in a few minutes.');

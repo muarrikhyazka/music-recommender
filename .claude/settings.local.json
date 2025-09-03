@@ -11,7 +11,8 @@
       "Bash(npm run dev:*)",
       "Bash(npm install:*)",
       "Bash(npm start)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

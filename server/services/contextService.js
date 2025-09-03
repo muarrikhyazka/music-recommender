@@ -29,9 +29,17 @@ class ContextService {
 
       // Get location context
       let locationContext;
-      if (userLocation) {
+      if (userLocation && userLocation.latitude && userLocation.longitude) {
+        // Use GPS coordinates to get location details via reverse geocoding
+        locationContext = await this.getLocationContext(null, {
+          lat: userLocation.latitude,
+          lng: userLocation.longitude
+        });
+      } else if (userLocation && userLocation.city) {
+        // User provided location details directly
         locationContext = userLocation;
       } else {
+        // Fall back to IP-based location detection
         locationContext = await this.getLocationContext(deviceInfo.ip);
       }
       context.geoLocation = locationContext;
