@@ -49,10 +49,12 @@ class ContextService {
       // Cache the context
       this.cache.set(`context_${userId}`, context);
 
-      // Log context for analytics (async, don't wait)
-      this.logContext(context).catch(err => {
-        logger.error('Failed to log context:', err);
-      });
+      // Log context for analytics (async, don't wait) - only if database is available
+      if (process.env.NODE_ENV === 'production') {
+        this.logContext(context).catch(err => {
+          logger.warn('Failed to log context (database may be unavailable):', err.message);
+        });
+      }
 
       return context;
     } catch (error) {

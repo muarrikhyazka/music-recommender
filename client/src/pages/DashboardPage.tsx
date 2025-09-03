@@ -141,6 +141,8 @@ const DashboardPage: React.FC = () => {
           contextData = await apiService.getCurrentContext(userLocation);
           console.log('Context API response:', contextData);
           console.log('Raw location from API:', contextData.location);
+          console.log('Location city from API:', contextData.location?.city);
+          console.log('Location country from API:', contextData.location?.country);
           
           // Map server response to expected format
           const currentTime = new Date();
@@ -150,8 +152,8 @@ const DashboardPage: React.FC = () => {
             timestamp: currentTime.toISOString(),
             timeOfDay: currentTimeOfDay, // Always use client-side time calculation
             geoLocation: {
-              city: contextData.location?.city || 'Your City',
-              country: contextData.location?.country || 'Your Country',
+              city: contextData.location?.city || (console.warn('Location city fallback used') || 'Your City'),
+              country: contextData.location?.country || (console.warn('Location country fallback used') || 'Your Country'),
               region: contextData.location?.region,
               coordinates: {
                 lat: userLocation?.latitude || 0,
@@ -421,7 +423,7 @@ const DashboardPage: React.FC = () => {
               🎵 {playlistName || 'Your Recommendations'}
             </h2>
             <p className="text-gray-300">
-              {recommendations.length} songs curated for your current mood and environment
+              {recommendations.filter(item => !item.isSection).length} songs curated for your current mood and environment
             </p>
           </div>
         </div>
