@@ -157,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Handle successful login from callback
   const handleLoginSuccess = (user: User, token: string) => {
+    console.log('handleLoginSuccess called', { user, token });
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user', JSON.stringify(user));
     dispatch({

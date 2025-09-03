@@ -13,6 +13,8 @@ const AuthCallbackPage: React.FC = () => {
       const userParam = searchParams.get('user');
       const error = searchParams.get('error');
 
+      console.log('AuthCallback received:', { token: !!token, userParam: !!userParam, error });
+
       if (error) {
         console.error('Authentication error:', error);
         toast.error(`Authentication failed: ${error}`);
@@ -23,25 +25,32 @@ const AuthCallbackPage: React.FC = () => {
       if (token && userParam) {
         try {
           const user = JSON.parse(decodeURIComponent(userParam));
+          console.log('Parsed user:', user);
           
-          // Use the global handler from AuthContext
+          // Store auth data
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          
+          // Use the global handler from AuthContext if available
           if ((window as any).__handleLoginSuccess) {
             (window as any).__handleLoginSuccess(user, token);
-            navigate('/dashboard');
           } else {
-            // Fallback: store directly and redirect
-            localStorage.setItem('auth_token', token);
-            localStorage.setItem('user', JSON.stringify(user));
             toast.success(`Welcome back, ${user.displayName}!`);
-            navigate('/dashboard');
           }
+          
+          // Navigate to dashboard with a small delay to ensure state is updated
+          setTimeout(() => {
+            console.log('Navigating to dashboard...');
+            navigate('/dashboard', { replace: true });
+          }, 100);
+          
         } catch (parseError) {
           console.error('Failed to parse user data:', parseError);
           toast.error('Authentication failed: Invalid user data');
           navigate('/');
         }
       } else {
-        console.error('Missing token or user data');
+        console.error('Missing token or user data', { token, userParam });
         toast.error('Authentication failed: Missing required data');
         navigate('/');
       }
