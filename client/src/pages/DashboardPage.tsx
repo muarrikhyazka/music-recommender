@@ -102,11 +102,34 @@ const DashboardPage: React.FC = () => {
 
         // Get current context (includes weather, location, time)
         const contextData = await apiService.getCurrentContext(userLocation);
-        setContext(contextData);
+        
+        // Map server response to expected format
+        const mappedContext = {
+          timestamp: contextData.timestamp,
+          timeOfDay: contextData.timeOfDay,
+          geoLocation: {
+            city: contextData.location?.city || 'Unknown',
+            country: contextData.location?.country || 'Unknown',
+            region: contextData.location?.region,
+            coordinates: {
+              lat: userLocation?.latitude || 0,
+              lng: userLocation?.longitude || 0
+            }
+          },
+          weather: contextData.weather || {
+            condition: 'unknown',
+            temperature: 0,
+            humidity: 0,
+            description: 'Weather data unavailable'
+          },
+          season: contextData.season
+        };
+        
+        setContext(mappedContext);
 
         // Get recommendations based on context
         const recommendationData = await apiService.previewRecommendations({
-          context: contextData,
+          context: mappedContext,
           userLocation,
           targetLength: 20,
           diversityWeight: 0.3

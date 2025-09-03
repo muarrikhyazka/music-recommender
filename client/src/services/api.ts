@@ -128,7 +128,18 @@ class ApiService {
 
   // Context and recommendation endpoints
   async getCurrentContext(userLocation?: { latitude: number; longitude: number }): Promise<ContextData> {
-    return this.post('/context/current', { userLocation });
+    // Build query parameters for GET request
+    const params = new URLSearchParams();
+    if (userLocation) {
+      params.append('lat', userLocation.latitude.toString());
+      params.append('lng', userLocation.longitude.toString());
+    }
+    
+    const endpoint = `/context/current${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await this.get(endpoint);
+    
+    // The server returns { success: true, context: {...} }
+    return response.context;
   }
 
   async previewRecommendations(request: RecommendationRequest): Promise<RecommendationResponse> {
