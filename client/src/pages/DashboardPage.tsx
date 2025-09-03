@@ -77,26 +77,51 @@ const DashboardPage: React.FC = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const getCurrentTimeOfDay = (date: Date) => {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
+  };
+
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Debug authentication
+        const token = localStorage.getItem('auth_token');
+        const user = localStorage.getItem('user');
+        console.log('Dashboard loading - Auth status:', {
+          hasToken: !!token,
+          hasUser: !!user,
+          tokenPreview: token ? token.substring(0, 20) + '...' : null
+        });
 
-        // Get user location
+        // Get user location and timezone
         let userLocation;
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        console.log('User timezone detected:', userTimezone);
+        
         try {
           const location = await locationService.getCurrentPosition({
-            enableHighAccuracy: false,
-            timeout: 10000,
+            enableHighAccuracy: true,
+            timeout: 15000,
             maximumAge: 300000 // 5 minutes
           });
           userLocation = {
             latitude: location.latitude,
-            longitude: location.longitude
+            longitude: location.longitude,
+            timezone: userTimezone
           };
+          console.log('GPS location obtained:', userLocation);
         } catch (locationError) {
-          console.log('Could not get precise location, using IP-based location');
+          console.log('GPS location failed, will use IP-based location:', locationError);
+          userLocation = {
+            timezone: userTimezone
+          };
           // Location will be detected server-side from IP
         }
 
@@ -109,9 +134,12 @@ const DashboardPage: React.FC = () => {
           console.log('Context API response:', contextData);
           
           // Map server response to expected format
+          const currentTime = new Date();
+          const currentTimeOfDay = getCurrentTimeOfDay(currentTime);
+          
           mappedContext = {
-            timestamp: contextData.timestamp || new Date().toISOString(),
-            timeOfDay: contextData.timeOfDay || 'afternoon',
+            timestamp: contextData.timestamp || currentTime.toISOString(),
+            timeOfDay: contextData.timeOfDay || currentTimeOfDay,
             geoLocation: {
               city: contextData.location?.city || 'Your City',
               country: contextData.location?.country || 'Your Country',
@@ -137,9 +165,12 @@ const DashboardPage: React.FC = () => {
             contextData = await apiService.getCurrentContext();
             console.log('Context API response (IP-based):', contextData);
             
+            const currentTime = new Date();
+            const currentTimeOfDay = getCurrentTimeOfDay(currentTime);
+            
             mappedContext = {
-              timestamp: contextData.timestamp || new Date().toISOString(),
-              timeOfDay: contextData.timeOfDay || 'afternoon',
+              timestamp: contextData.timestamp || currentTime.toISOString(),
+              timeOfDay: contextData.timeOfDay || currentTimeOfDay,
               geoLocation: {
                 city: contextData.location?.city || 'Your City',
                 country: contextData.location?.country || 'Your Country',
@@ -161,9 +192,12 @@ const DashboardPage: React.FC = () => {
             console.error('Both context API calls failed, using fallback:', fallbackError);
             
             // Final fallback
+            const currentTime = new Date();
+            const currentTimeOfDay = getCurrentTimeOfDay(currentTime);
+            
             mappedContext = {
-              timestamp: new Date().toISOString(),
-              timeOfDay: 'afternoon',
+              timestamp: currentTime.toISOString(),
+              timeOfDay: currentTimeOfDay,
               geoLocation: {
                 city: 'Your City',
                 country: 'Your Country',
@@ -207,9 +241,29 @@ const DashboardPage: React.FC = () => {
           }
         } catch (recommendationError) {
           console.error('Recommendations API failed:', recommendationError);
-          // Continue with empty recommendations - show context data anyway
-          setRecommendations([]);
-          setPlaylistName('Music Recommendations');
+          
+          // If it's a 401 error, show a message about Spotify authentication
+          if (recommendationError.message.includes('401')) {
+            console.log('Authentication required - user may need to re-authenticate with Spotify');
+            setPlaylistName('Spotify Authentication Required');
+            setRecommendations([]);
+          } else {
+            // For other errors, show demo recommendations
+            console.log('Using demo recommendations due to API error');
+            setPlaylistName(`Demo Playlist - ${mappedContext.timeOfDay} vibes`);
+            setRecommendations([
+              {
+                id: 'demo1',
+                name: 'Your Perfect Song',
+                artists: [{ name: 'Demo Artist', id: 'demo-artist1' }],
+                album: { name: 'Demo Album', images: [] },
+                uri: 'spotify:track:demo1',
+                duration: 240000,
+                score: 0.95,
+                reasons: [`Perfect for ${mappedContext.timeOfDay}`, `Matches ${mappedContext.weather.condition} weather`]
+              }
+            ]);
+          }
         }
 
       } catch (err) {
