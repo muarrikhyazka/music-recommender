@@ -62,6 +62,7 @@ interface RecommendationResponse {
 class ApiService {
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('auth_token');
+    console.log('Auth token for API call:', token ? `${token.substring(0, 20)}...` : 'null');
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })

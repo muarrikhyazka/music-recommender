@@ -2,7 +2,7 @@ const axios = require('axios');
 const NodeCache = require('node-cache');
 const logger = require('../utils/logger');
 const ContextLog = require('../models/ContextLog');
-const { v4: uuidv4 } = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 class ContextService {
   constructor() {
