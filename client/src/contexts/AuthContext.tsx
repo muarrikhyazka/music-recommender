@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: {
-              user: response.data || response,
+              user: response.user || response.data || response,
               token,
             },
           });
@@ -111,10 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       dispatch({ type: 'LOGIN_START' });
       
-      const response = await apiService.get('/auth/spotify');
-      window.location.href = response.authUrl || response.data?.authUrl;
+      const response = await fetch('/api/auth/spotify');
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error('No auth URL received from server');
+      }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
+      const errorMessage = error.message || 'Login failed';
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       toast.error(errorMessage);
     }
