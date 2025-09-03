@@ -5,7 +5,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext.tsx';
 import { ContextProvider } from './contexts/ContextProvider.tsx';
 import Layout from './components/Layout.tsx';
 import HomePage from './pages/HomePage.tsx';
-import LoginPage from './pages/LoginPage.tsx';
 import AuthCallbackPage from './pages/AuthCallbackPage.tsx';
 import DashboardPage from './pages/DashboardPage.tsx';
 import PlaylistsPage from './pages/PlaylistsPage.tsx';
@@ -27,7 +26,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
   
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
@@ -61,14 +60,6 @@ const AppRoutes: React.FC = () => {
         element={
           <PublicRoute>
             <HomePage />
-          </PublicRoute>
-        } 
-      />
-      <Route 
-        path="/login" 
-        element={
-          <PublicRoute>
-            <LoginPage />
           </PublicRoute>
         } 
       />

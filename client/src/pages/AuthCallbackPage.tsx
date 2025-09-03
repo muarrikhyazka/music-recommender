@@ -16,7 +16,7 @@ const AuthCallbackPage: React.FC = () => {
       if (error) {
         console.error('Authentication error:', error);
         toast.error(`Authentication failed: ${error}`);
-        navigate('/login');
+        navigate('/');
         return;
       }
 
@@ -38,12 +38,12 @@ const AuthCallbackPage: React.FC = () => {
         } catch (parseError) {
           console.error('Failed to parse user data:', parseError);
           toast.error('Authentication failed: Invalid user data');
-          navigate('/login');
+          navigate('/');
         }
       } else {
         console.error('Missing token or user data');
         toast.error('Authentication failed: Missing required data');
-        navigate('/login');
+        navigate('/');
       }
     };
 
