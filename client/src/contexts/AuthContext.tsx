@@ -80,10 +80,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('auth_token');
+      const storedUser = localStorage.getItem('user');
       
       if (token) {
         try {
           dispatch({ type: 'SET_LOADING', payload: true });
+          
+          // Try to get fresh user data from API
           const response = await apiService.get('/auth/me');
           
           dispatch({
@@ -94,10 +97,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             },
           });
         } catch (error) {
-          console.error('Failed to fetch user data:', error);
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user');
-          dispatch({ type: 'LOGOUT' });
+          console.error('Failed to fetch user data from API:', error);
+          
+          // Fallback to stored user data if available
+          if (storedUser) {
+            try {
+              const user = JSON.parse(storedUser);
+              console.log('Using cached user data:', user);
+              dispatch({
+                type: 'LOGIN_SUCCESS',
+                payload: { user, token },
+              });
+            } catch (parseError) {
+              console.error('Failed to parse stored user data:', parseError);
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('user');
+              dispatch({ type: 'LOGOUT' });
+            }
+          } else {
+            // No fallback data, clear auth
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            dispatch({ type: 'LOGOUT' });
+          }
         }
       } else {
         dispatch({ type: 'SET_LOADING', payload: false });
