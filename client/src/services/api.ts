@@ -69,56 +69,61 @@ class ApiService {
   }
 
   async get(endpoint: string): Promise<any> {
-    const response = await fetch(`/api${endpoint}`, {
+    return this.makeRequest(endpoint, { 
+      method: 'GET',
       headers: this.getAuthHeaders()
     });
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+  }
+
+  private async makeRequest(endpoint: string, options: RequestInit, retryCount = 0): Promise<any> {
+    try {
+      const response = await fetch(`/api${endpoint}`, options);
+      
+      // Handle rate limiting with exponential backoff
+      if (response.status === 429 && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`Rate limited. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.makeRequest(endpoint, options, retryCount + 1);
+      }
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      if (retryCount < 2 && error instanceof TypeError) {
+        // Network error, retry once
+        console.log('Network error, retrying...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.makeRequest(endpoint, options, retryCount + 1);
+      }
+      throw error;
     }
-    
-    return response.json();
   }
   
   async post(endpoint: string, data?: any): Promise<any> {
-    const response = await fetch(`/api${endpoint}`, {
+    return this.makeRequest(endpoint, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: data ? JSON.stringify(data) : undefined
     });
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
-    }
-    
-    return response.json();
   }
   
   async put(endpoint: string, data?: any): Promise<any> {
-    const response = await fetch(`/api${endpoint}`, {
+    return this.makeRequest(endpoint, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
       body: data ? JSON.stringify(data) : undefined
     });
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
-    }
-    
-    return response.json();
   }
   
   async delete(endpoint: string): Promise<any> {
-    const response = await fetch(`/api${endpoint}`, {
+    return this.makeRequest(endpoint, {
       method: 'DELETE',
       headers: this.getAuthHeaders()
     });
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
-    }
-    
-    return response.json();
   }
 
   // Context and recommendation endpoints
