@@ -114,12 +114,14 @@ class ContextService {
       const cacheKey = ip ? `location_${ip}` : `location_${coordinates?.lat}_${coordinates?.lng}`;
       const cached = this.cache.get(cacheKey);
       if (cached) {
+        logger.debug('Using cached location data', { cacheKey, city: cached.city });
         return cached;
       }
 
       let locationData;
 
       if (coordinates) {
+        logger.debug('Getting location from coordinates', coordinates);
         // Reverse geocoding
         const response = await axios.get(
           `https://api.openweathermap.org/geo/1.0/reverse`,
@@ -145,21 +147,37 @@ class ContextService {
               lng: data.lon
             }
           };
+          logger.debug('Location from coordinates', locationData);
         }
-      } else if (ip && this.geoApiKey) {
-        // IP geolocation
+      } else if (this.geoApiKey) {
+        logger.debug('Getting location from IP', { ip, hasApiKey: !!this.geoApiKey });
+        
+        // IP geolocation - let API auto-detect IP if not provided
+        const params = {
+          apiKey: this.geoApiKey
+        };
+        
+        // Only add IP parameter if we have a valid IP and it's not localhost/internal
+        if (ip && !this.isLocalIP(ip)) {
+          params.ip = ip;
+        }
+        
         const response = await axios.get(
           `https://api.ipgeolocation.io/ipgeo`,
           {
-            params: {
-              apiKey: this.geoApiKey,
-              ip: ip
-            },
-            timeout: 5000
+            params,
+            timeout: 10000
           }
         );
 
-        if (response.data) {
+        logger.debug('GeoIP API response', { 
+          status: response.status, 
+          city: response.data?.city,
+          country: response.data?.country_name,
+          ip: response.data?.ip
+        });
+
+        if (response.data && response.data.city && response.data.city !== '-') {
           const data = response.data;
           locationData = {
             city: data.city,
@@ -171,11 +189,15 @@ class ContextService {
               lng: parseFloat(data.longitude)
             }
           };
+          logger.debug('Location from IP geolocation', locationData);
         }
+      } else {
+        logger.warn('No GeoIP API key configured, cannot get location from IP');
       }
 
       // Fallback to default location
       if (!locationData) {
+        logger.warn('No location data obtained, using fallback');
         locationData = {
           city: 'Unknown',
           country: 'Unknown',
@@ -189,12 +211,37 @@ class ContextService {
 
     } catch (error) {
       logger.error('Error getting location context:', error);
+      if (error.response) {
+        logger.error('GeoIP API error response:', {
+          status: error.response.status,
+          data: error.response.data
+        });
+      }
       return {
         city: 'Unknown',
         country: 'Unknown',
         coordinates: { lat: 0, lng: 0 }
       };
     }
+  }
+
+  /**
+   * Check if IP address is local/private
+   */
+  isLocalIP(ip) {
+    if (!ip || ip === '::1' || ip === '127.0.0.1') return true;
+    
+    // Check for private IP ranges
+    const privateRanges = [
+      /^10\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^192\.168\./,
+      /^::ffff:192\.168\./,
+      /^::ffff:10\./,
+      /^::ffff:172\./
+    ];
+    
+    return privateRanges.some(range => range.test(ip));
   }
 
   /**
@@ -297,7 +344,17 @@ class ContextService {
     const now = new Date();
     const month = now.getMonth() + 1; // 1-12
     
-    // Northern hemisphere seasons (reverse for southern hemisphere)
+    // Check if location is in tropical zone (between 23.5°N and 23.5°S)
+    if (Math.abs(latitude) < 23.5) {
+      // Tropical regions: wet and dry seasons instead of traditional seasons
+      if (month >= 5 && month <= 10) {
+        return 'wet'; // Wet/rainy season (May-October in most tropical regions)
+      } else {
+        return 'dry'; // Dry season (November-April)
+      }
+    }
+    
+    // Traditional seasons for temperate zones
     let season;
     if (month >= 3 && month <= 5) {
       season = 'spring';
@@ -309,8 +366,8 @@ class ContextService {
       season = 'winter';
     }
 
-    // Reverse seasons for southern hemisphere
-    if (latitude < 0) {
+    // Reverse seasons for southern hemisphere (outside tropical zone)
+    if (latitude < -23.5) {
       const seasonMap = {
         'spring': 'autumn',
         'summer': 'winter',

@@ -33,33 +33,12 @@ class RecommendationEngine {
       const accessToken = await spotifyService.ensureValidToken(user);
       const userProfile = await this.buildUserProfile(user, accessToken);
 
-      // Get rule-based candidates
-      const ruleResults = await ruleEngine.getCandidates(context, userProfile);
-      
-      // Get tracks from Spotify based on candidates
-      const candidateTracks = await this.fetchCandidateTracks(
-        accessToken, 
-        ruleResults.candidates, 
-        options.targetLength || 20
-      );
-
-      if (candidateTracks.length === 0) {
-        throw new Error('No candidate tracks found');
-      }
-
-      // Apply ML ranking
-      const rankedTracks = await this.rankTracks(
-        candidateTracks,
+      // Generate two-part recommendations
+      const twoPartRecommendations = await this.generateTwoPartRecommendations(
+        accessToken,
         context,
         userProfile,
-        ruleResults.candidates
-      );
-
-      // Generate final recommendations
-      const recommendations = this.selectFinalTracks(
-        rankedTracks,
-        options.targetLength || 20,
-        options.diversityWeight || 0.3
+        options
       );
 
       const processingTime = Date.now() - startTime;
@@ -70,11 +49,11 @@ class RecommendationEngine {
         userId,
         contextId: context.contextId,
         deliveredAt: new Date(),
-        recommendationType: 'hybrid',
+        recommendationType: 'two_part_hybrid',
         algorithm: {
           version: this.version,
           model: this.modelType,
-          confidence: this.calculateConfidence(recommendations, ruleResults),
+          confidence: this.calculateTwoPartConfidence(twoPartRecommendations),
           processingTime
         },
         input: {
@@ -91,11 +70,18 @@ class RecommendationEngine {
             topArtists: userProfile.topArtists?.map(a => a.name).slice(0, 5) || [],
             recentTracks: userProfile.recentTracks?.map(t => t.name).slice(0, 10) || [],
             listeningPatterns: userProfile.patterns
-          },
-          appliedRules: ruleResults.appliedRules
+          }
         },
         output: {
-          tracks: recommendations.map((track, index) => ({
+          fromUserPlaylists: (twoPartRecommendations.fromUserPlaylists || []).map((track, index) => ({
+            spotifyTrackId: track.id,
+            title: track.name,
+            artist: track.artists[0]?.name,
+            score: track.score || 0,
+            reasons: track.reasons || [],
+            position: index
+          })),
+          fromGlobalRecommendations: (twoPartRecommendations.fromGlobalRecommendations || []).map((track, index) => ({
             spotifyTrackId: track.id,
             title: track.name,
             artist: track.artists[0]?.name,
@@ -104,31 +90,32 @@ class RecommendationEngine {
             position: index
           })),
           playlistName: this.generatePlaylistName(context),
-          playlistDescription: this.generatePlaylistDescription(context, recommendations),
-          totalTracks: recommendations.length,
-          totalDuration: recommendations.reduce((sum, track) => sum + (track.duration || 0), 0),
-          diversity: this.calculateDiversity(recommendations)
+          playlistDescription: this.generatePlaylistDescription(context, twoPartRecommendations.combined || []),
+          totalUserTracks: twoPartRecommendations.fromUserPlaylists?.length || 0,
+          totalGlobalTracks: twoPartRecommendations.fromGlobalRecommendations?.length || 0,
+          diversity: this.calculateDiversity(twoPartRecommendations.combined || [])
         }
       };
 
       await this.logRecommendation(logData);
 
-      logger.info('Recommendation generation completed', {
+      logger.info('Two-part recommendation generation completed', {
         userId,
         recId,
-        tracksCount: recommendations.length,
+        userTracksCount: twoPartRecommendations.fromUserPlaylists?.length || 0,
+        globalTracksCount: twoPartRecommendations.fromGlobalRecommendations?.length || 0,
         processingTime
       });
 
       return {
-        recommendations,
+        fromUserPlaylists: twoPartRecommendations.fromUserPlaylists,
+        fromGlobalRecommendations: twoPartRecommendations.fromGlobalRecommendations,
         metadata: {
           recId,
           processingTime,
           confidence: logData.algorithm.confidence,
           playlistName: logData.output.playlistName,
           playlistDescription: logData.output.playlistDescription,
-          appliedRules: ruleResults.appliedRules,
           diversity: logData.output.diversity
         }
       };
@@ -671,6 +658,201 @@ class RecommendationEngine {
       logger.error('Error generating fallback recommendations:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate two-part recommendations: from user playlists and global recommendations
+   */
+  async generateTwoPartRecommendations(accessToken, context, userProfile, options = {}) {
+    const targetLength = options.targetLength || 20;
+    const userPlaylistTarget = Math.floor(targetLength * 0.4); // 40% from user playlists
+    const globalTarget = targetLength - userPlaylistTarget; // 60% from global
+
+    try {
+      // Part 1: Get recommendations from user's playlists
+      const fromUserPlaylists = await this.getRecommendationsFromUserPlaylists(
+        accessToken,
+        context,
+        userProfile,
+        userPlaylistTarget
+      );
+
+      // Part 2: Get global recommendations
+      const fromGlobalRecommendations = await this.getGlobalRecommendations(
+        accessToken,
+        context,
+        userProfile,
+        globalTarget
+      );
+
+      // Combine for diversity calculation
+      const combined = [
+        ...(fromUserPlaylists || []),
+        ...(fromGlobalRecommendations || [])
+      ];
+
+      return {
+        fromUserPlaylists: fromUserPlaylists?.length > 0 ? fromUserPlaylists : null,
+        fromGlobalRecommendations,
+        combined
+      };
+    } catch (error) {
+      logger.error('Error generating two-part recommendations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get recommendations from user's playlists
+   */
+  async getRecommendationsFromUserPlaylists(accessToken, context, userProfile, targetCount) {
+    try {
+      // Get user's playlists
+      const userPlaylists = await spotifyService.getUserPlaylists(accessToken);
+      
+      if (!userPlaylists || userPlaylists.length === 0) {
+        logger.info('No user playlists found');
+        return null;
+      }
+
+      // Get tracks from user's playlists
+      let playlistTracks = [];
+      for (const playlist of userPlaylists.slice(0, 10)) { // Limit to 10 playlists
+        try {
+          const tracks = await spotifyService.getPlaylistTracks(accessToken, playlist.id);
+          playlistTracks.push(...tracks.slice(0, 50)); // Limit tracks per playlist
+        } catch (error) {
+          logger.warn(`Failed to get tracks from playlist ${playlist.id}:`, error);
+        }
+      }
+
+      if (playlistTracks.length === 0) {
+        return null;
+      }
+
+      // Remove duplicates
+      const uniqueTracks = this.removeDuplicateTracks(playlistTracks);
+
+      // Apply context-based filtering
+      const contextFiltered = this.filterTracksByContext(uniqueTracks, context);
+      
+      if (contextFiltered.length === 0) {
+        return null;
+      }
+
+      // Rank and select final tracks
+      const rankedTracks = await this.rankTracks(contextFiltered, context, userProfile, []);
+      const selectedTracks = this.selectFinalTracks(rankedTracks, targetCount, 0.5);
+
+      // Add source information
+      return selectedTracks.map(track => ({
+        ...track,
+        source: 'user_playlist',
+        reasons: [...(track.reasons || []), 'From your playlists']
+      }));
+
+    } catch (error) {
+      logger.error('Error getting recommendations from user playlists:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get global recommendations using existing system
+   */
+  async getGlobalRecommendations(accessToken, context, userProfile, targetCount) {
+    try {
+      // Get rule-based candidates
+      const ruleResults = await ruleEngine.getCandidates(context, userProfile);
+      
+      // Get tracks from Spotify based on candidates
+      const candidateTracks = await this.fetchCandidateTracks(
+        accessToken, 
+        ruleResults.candidates, 
+        targetCount * 2 // Get more candidates for better selection
+      );
+
+      if (candidateTracks.length === 0) {
+        throw new Error('No candidate tracks found for global recommendations');
+      }
+
+      // Apply ML ranking
+      const rankedTracks = await this.rankTracks(
+        candidateTracks,
+        context,
+        userProfile,
+        ruleResults.candidates
+      );
+
+      // Generate final recommendations
+      const selectedTracks = this.selectFinalTracks(rankedTracks, targetCount, 0.3);
+
+      // Add source information
+      return selectedTracks.map(track => ({
+        ...track,
+        source: 'global',
+        reasons: [...(track.reasons || []), 'Discover new music']
+      }));
+
+    } catch (error) {
+      logger.error('Error getting global recommendations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove duplicate tracks based on track ID
+   */
+  removeDuplicateTracks(tracks) {
+    const seen = new Set();
+    return tracks.filter(track => {
+      if (seen.has(track.id)) {
+        return false;
+      }
+      seen.add(track.id);
+      return true;
+    });
+  }
+
+  /**
+   * Filter tracks based on context
+   */
+  filterTracksByContext(tracks, context) {
+    // Basic context filtering - can be enhanced based on requirements
+    return tracks.filter(track => {
+      // Example: filter explicit content for morning time
+      if (context.timeOfDay === 'morning' && track.explicit) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  /**
+   * Calculate confidence for two-part recommendations
+   */
+  calculateTwoPartConfidence(twoPartRecommendations) {
+    const userPlaylistTracks = twoPartRecommendations.fromUserPlaylists || [];
+    const globalTracks = twoPartRecommendations.fromGlobalRecommendations || [];
+    
+    if (userPlaylistTracks.length === 0 && globalTracks.length === 0) return 0;
+
+    const userAvgScore = userPlaylistTracks.length > 0 
+      ? userPlaylistTracks.reduce((sum, track) => sum + (track.score || 0), 0) / userPlaylistTracks.length
+      : 0;
+    
+    const globalAvgScore = globalTracks.length > 0
+      ? globalTracks.reduce((sum, track) => sum + (track.score || 0), 0) / globalTracks.length
+      : 0;
+
+    // Weighted confidence (higher weight for user playlist matches)
+    const userWeight = userPlaylistTracks.length > 0 ? 0.6 : 0;
+    const globalWeight = globalTracks.length > 0 ? 0.4 : 0;
+    
+    const totalWeight = userWeight + globalWeight;
+    if (totalWeight === 0) return 0;
+
+    return Math.max(0, Math.min(1, (userAvgScore * userWeight + globalAvgScore * globalWeight) / totalWeight));
   }
 
   /**

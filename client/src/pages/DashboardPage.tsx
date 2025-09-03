@@ -238,8 +238,24 @@ const DashboardPage: React.FC = () => {
             diversityWeight: 0.3
           });
 
-          if (recommendationData.success && recommendationData.recommendations) {
-            setRecommendations(recommendationData.recommendations);
+          if (recommendationData.success) {
+            // Handle two-part recommendations
+            const userRecommendations = recommendationData.fromUserPlaylists || [];
+            const globalRecommendations = recommendationData.fromGlobalRecommendations || [];
+            
+            // Combine for display with section markers
+            const combinedRecommendations = [
+              ...(userRecommendations.length > 0 ? 
+                [{ isSection: true, title: 'From Your Playlists', id: 'user-section' }] : []
+              ),
+              ...userRecommendations.map(track => ({ ...track, section: 'user' })),
+              ...(globalRecommendations.length > 0 ? 
+                [{ isSection: true, title: 'Discover New Music', id: 'global-section' }] : []
+              ),
+              ...globalRecommendations.map(track => ({ ...track, section: 'global' }))
+            ];
+            
+            setRecommendations(combinedRecommendations);
             if (recommendationData.metadata?.playlistName) {
               setPlaylistName(recommendationData.metadata.playlistName);
             }
@@ -257,31 +273,47 @@ const DashboardPage: React.FC = () => {
             setPlaylistName('Spotify Authentication Required');
             setRecommendations([]);
           } else {
-            // For other errors, show demo recommendations
+            // For other errors, show demo recommendations with two-part structure
             console.log('Using demo recommendations due to API error');
             setPlaylistName(`Demo Playlist - ${mappedContext.timeOfDay} vibes`);
-            setRecommendations([
+            
+            const demoRecommendations = [
+              { isSection: true, title: 'Discover New Music', id: 'global-section' },
               {
                 id: 'demo1',
                 name: 'Perfect Day - Demo Song',
                 artists: [{ name: 'Demo Artist', id: 'demo-artist1' }],
-                album: { name: 'Context Demo', images: [{ url: 'https://via.placeholder.com/300x300/1DB954/FFFFFF?text=Demo' }] },
-                uri: 'https://open.spotify.com',
+                album: { 
+                  name: 'Context Demo', 
+                  images: [{ 
+                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFEQjk1NCIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtSBEZW1vPC90ZXh0Pjwvc3ZnPg==' 
+                  }] 
+                },
+                uri: 'https://open.spotify.com/playlist/37i9dQZF1DX0XUsuxWHRQd',
                 duration: 240000,
                 score: 0.95,
+                section: 'global',
                 reasons: [`Perfect for ${mappedContext.timeOfDay}`, `Matches ${mappedContext.weather.condition} weather`]
               },
               {
                 id: 'demo2',
                 name: `${mappedContext.timeOfDay} Vibes`,
                 artists: [{ name: 'Weather Sounds', id: 'demo-artist2' }],
-                album: { name: 'Atmospheric', images: [{ url: 'https://via.placeholder.com/300x300/6366f1/FFFFFF?text=Music' }] },
-                uri: 'https://open.spotify.com',
+                album: { 
+                  name: 'Atmospheric', 
+                  images: [{ 
+                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzYzNjZmMSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtiBNdXNpYzwvdGV4dD48L3N2Zz4=' 
+                  }] 
+                },
+                uri: 'https://open.spotify.com/playlist/37i9dQZF1DXc6IFF23C9jj',
                 duration: 180000,
                 score: 0.88,
+                section: 'global',
                 reasons: [`${mappedContext.geoLocation.city} weather`, 'Time-based selection']
               }
-            ]);
+            ];
+            
+            setRecommendations(demoRecommendations);
           }
         }
 
@@ -396,57 +428,76 @@ const DashboardPage: React.FC = () => {
 
         {recommendations.length > 0 ? (
           <div className="space-y-4">
-            {recommendations.map((track, index) => (
-              <div key={track.id} className="flex items-center space-x-4 p-4 hover:bg-white/5 rounded-lg transition-colors">
-                <div className="text-gray-400 font-mono text-sm w-8">
-                  {(index + 1).toString().padStart(2, '0')}
-                </div>
-                
-                {track.album?.images?.[0] && (
-                  <img 
-                    src={track.album.images[0].url} 
-                    alt={track.album.name}
-                    className="w-12 h-12 rounded-md object-cover"
-                  />
-                )}
-                
-                <div className="flex-grow">
-                  <h3 className="font-semibold text-white">{track.name}</h3>
-                  <p className="text-sm text-gray-300">
-                    {track.artists.map(artist => artist.name).join(', ')}
-                  </p>
-                  {track.reasons && track.reasons.length > 0 && (
-                    <p className="text-xs text-blue-400 mt-1">
-                      {track.reasons.join(', ')}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="text-right">
-                  {track.duration && (
-                    <p className="text-sm text-gray-400">
-                      {formatDuration(track.duration)}
-                    </p>
-                  )}
-                  {track.score && (
-                    <p className="text-xs text-green-400">
-                      {Math.round(track.score * 100)}% match
-                    </p>
-                  )}
-                </div>
+            {recommendations.map((item, index) => {
+              // Render section headers
+              if (item.isSection) {
+                return (
+                  <div key={item.id} className="flex items-center py-4">
+                    <div className="flex-grow border-t border-gray-600"></div>
+                    <div className="px-4">
+                      <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                    </div>
+                    <div className="flex-grow border-t border-gray-600"></div>
+                  </div>
+                );
+              }
 
-                <a
-                  href={track.uri}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-500 hover:text-green-700 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                  </svg>
-                </a>
-              </div>
-            ))}
+              // Render tracks
+              const track = item;
+              const trackNumber = recommendations.slice(0, index).filter(r => !r.isSection).length + 1;
+              
+              return (
+                <div key={track.id} className="flex items-center space-x-4 p-4 hover:bg-white/5 rounded-lg transition-colors">
+                  <div className="text-gray-400 font-mono text-sm w-8">
+                    {trackNumber.toString().padStart(2, '0')}
+                  </div>
+                  
+                  {track.album?.images?.[0] && (
+                    <img 
+                      src={track.album.images[0].url} 
+                      alt={track.album.name}
+                      className="w-12 h-12 rounded-md object-cover"
+                    />
+                  )}
+                  
+                  <div className="flex-grow">
+                    <h3 className="font-semibold text-white">{track.name}</h3>
+                    <p className="text-sm text-gray-300">
+                      {track.artists.map(artist => artist.name).join(', ')}
+                    </p>
+                    {track.reasons && track.reasons.length > 0 && (
+                      <p className="text-xs text-blue-400 mt-1">
+                        {track.reasons.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="text-right">
+                    {track.duration && (
+                      <p className="text-sm text-gray-400">
+                        {formatDuration(track.duration)}
+                      </p>
+                    )}
+                    {track.score && (
+                      <p className="text-xs text-green-400">
+                        {Math.round(track.score * 100)}% match
+                      </p>
+                    )}
+                  </div>
+
+                  <a
+                    href={track.uri}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-500 hover:text-green-700 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                    </svg>
+                  </a>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">

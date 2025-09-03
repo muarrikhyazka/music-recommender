@@ -37,8 +37,18 @@ router.get('/current',
         userLocation = { city, country };
       }
 
+      // Get the real IP address, considering proxy headers
+      const getRealIP = (req) => {
+        return req.get('cf-connecting-ip') ||    // Cloudflare
+               req.get('x-real-ip') ||           // Nginx proxy
+               req.get('x-forwarded-for')?.split(',')[0] || // Load balancer
+               req.connection?.remoteAddress ||   // Direct connection
+               req.ip ||                         // Express default
+               null;
+      };
+
       const deviceInfo = {
-        ip: req.ip,
+        ip: getRealIP(req),
         userAgent: req.get('User-Agent'),
         platform: req.get('X-Platform') || 'web'
       };
