@@ -27,22 +27,23 @@ const AuthCallbackPage: React.FC = () => {
           const user = JSON.parse(decodeURIComponent(userParam));
           console.log('Parsed user:', user);
           
-          // Store auth data
+          // Store auth data first
           localStorage.setItem('auth_token', token);
           localStorage.setItem('user', JSON.stringify(user));
           
-          // Use the global handler from AuthContext if available
+          // Use the global handler from AuthContext to update state
           if ((window as any).__handleLoginSuccess) {
             (window as any).__handleLoginSuccess(user, token);
           } else {
             toast.success(`Welcome back, ${user.displayName}!`);
           }
           
-          // Navigate to dashboard with a small delay to ensure state is updated
+          // Navigate to dashboard after ensuring auth state is updated
           setTimeout(() => {
             console.log('Navigating to dashboard...');
-            navigate('/dashboard', { replace: true });
-          }, 100);
+            // Force a page refresh to ensure auth state is properly loaded
+            window.location.href = '/dashboard';
+          }, 500);
           
         } catch (parseError) {
           console.error('Failed to parse user data:', parseError);

@@ -160,6 +160,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('handleLoginSuccess called', { user, token });
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user', JSON.stringify(user));
+    
+    // Ensure loading is false and user state is set immediately
+    dispatch({ type: 'SET_LOADING', payload: false });
     dispatch({
       type: 'LOGIN_SUCCESS',
       payload: { user, token },
