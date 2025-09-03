@@ -85,6 +85,14 @@ const DashboardPage: React.FC = () => {
     return 'night';
   };
 
+  const getCurrentSeason = (date: Date) => {
+    const month = date.getMonth() + 1; // getMonth() returns 0-11
+    if (month >= 3 && month <= 5) return 'spring';
+    if (month >= 6 && month <= 8) return 'summer';
+    if (month >= 9 && month <= 11) return 'autumn';
+    return 'winter';
+  };
+
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
@@ -132,14 +140,15 @@ const DashboardPage: React.FC = () => {
         try {
           contextData = await apiService.getCurrentContext(userLocation);
           console.log('Context API response:', contextData);
+          console.log('Raw location from API:', contextData.location);
           
           // Map server response to expected format
           const currentTime = new Date();
           const currentTimeOfDay = getCurrentTimeOfDay(currentTime);
           
           mappedContext = {
-            timestamp: contextData.timestamp || currentTime.toISOString(),
-            timeOfDay: contextData.timeOfDay || currentTimeOfDay,
+            timestamp: currentTime.toISOString(),
+            timeOfDay: currentTimeOfDay, // Always use client-side time calculation
             geoLocation: {
               city: contextData.location?.city || 'Your City',
               country: contextData.location?.country || 'Your Country',
@@ -155,7 +164,7 @@ const DashboardPage: React.FC = () => {
               humidity: 50,
               description: 'Pleasant weather'
             },
-            season: contextData.season || 'spring'
+            season: contextData.season || getCurrentSeason(currentTime)
           };
         } catch (contextError) {
           console.error('Context API failed, trying without location:', contextError);
@@ -169,8 +178,8 @@ const DashboardPage: React.FC = () => {
             const currentTimeOfDay = getCurrentTimeOfDay(currentTime);
             
             mappedContext = {
-              timestamp: contextData.timestamp || currentTime.toISOString(),
-              timeOfDay: contextData.timeOfDay || currentTimeOfDay,
+              timestamp: currentTime.toISOString(),
+              timeOfDay: currentTimeOfDay,
               geoLocation: {
                 city: contextData.location?.city || 'Your City',
                 country: contextData.location?.country || 'Your Country',
@@ -186,7 +195,7 @@ const DashboardPage: React.FC = () => {
                 humidity: 50,
                 description: 'Pleasant weather'
               },
-              season: contextData.season || 'spring'
+              season: contextData.season || getCurrentSeason(currentTime)
             };
           } catch (fallbackError) {
             console.error('Both context API calls failed, using fallback:', fallbackError);
@@ -213,7 +222,7 @@ const DashboardPage: React.FC = () => {
                 humidity: 50,
                 description: 'Pleasant weather'
               },
-              season: 'spring'
+              season: getCurrentSeason(currentTime)
             };
           }
         }
@@ -254,13 +263,23 @@ const DashboardPage: React.FC = () => {
             setRecommendations([
               {
                 id: 'demo1',
-                name: 'Your Perfect Song',
+                name: 'Perfect Day - Demo Song',
                 artists: [{ name: 'Demo Artist', id: 'demo-artist1' }],
-                album: { name: 'Demo Album', images: [] },
-                uri: 'spotify:track:demo1',
+                album: { name: 'Context Demo', images: [{ url: 'https://via.placeholder.com/300x300/1DB954/FFFFFF?text=Demo' }] },
+                uri: 'https://open.spotify.com',
                 duration: 240000,
                 score: 0.95,
                 reasons: [`Perfect for ${mappedContext.timeOfDay}`, `Matches ${mappedContext.weather.condition} weather`]
+              },
+              {
+                id: 'demo2',
+                name: `${mappedContext.timeOfDay} Vibes`,
+                artists: [{ name: 'Weather Sounds', id: 'demo-artist2' }],
+                album: { name: 'Atmospheric', images: [{ url: 'https://via.placeholder.com/300x300/6366f1/FFFFFF?text=Music' }] },
+                uri: 'https://open.spotify.com',
+                duration: 180000,
+                score: 0.88,
+                reasons: [`${mappedContext.geoLocation.city} weather`, 'Time-based selection']
               }
             ]);
           }

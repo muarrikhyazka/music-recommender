@@ -71,9 +71,7 @@ const AppRoutes: React.FC = () => {
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <Layout>
-              <DashboardPage />
-            </Layout>
+            <DashboardPage />
           </ProtectedRoute>
         } 
       />
