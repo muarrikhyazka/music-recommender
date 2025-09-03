@@ -144,8 +144,8 @@ class RecommendationEngine {
         logger.error('Failed to log error recommendation:', logError);
       });
 
-      // Return fallback recommendations
-      return this.getFallbackRecommendations(userId, context);
+      // No fallback recommendations - throw error for production
+      throw new Error('Failed to generate recommendations - service unavailable');
     }
   }
 
@@ -620,45 +620,6 @@ class RecommendationEngine {
     return templates[Math.floor(Math.random() * templates.length)];
   }
 
-  /**
-   * Get fallback recommendations when main algorithm fails
-   */
-  async getFallbackRecommendations(userId, context) {
-    try {
-      logger.info('Generating fallback recommendations', { userId });
-
-      const fallbackTracks = [
-        {
-          id: 'fallback_1',
-          name: 'Popular Track 1',
-          artists: [{ name: 'Popular Artist 1' }],
-          album: 'Popular Album 1',
-          popularity: 80,
-          uri: 'spotify:track:fallback_1',
-          score: 0.5,
-          reasons: ['Fallback recommendation']
-        }
-        // In a real implementation, you'd have a curated list of popular tracks
-        // or fetch them from a cache/database
-      ];
-
-      return {
-        recommendations: fallbackTracks,
-        metadata: {
-          recId: uuidv4(),
-          processingTime: 100,
-          confidence: 0.3,
-          playlistName: this.generatePlaylistName(context),
-          playlistDescription: 'Fallback playlist when personalization is unavailable',
-          appliedRules: [{ ruleId: 'fallback', name: 'Fallback Rule' }],
-          diversity: { artistCount: 1, genreCount: 1 }
-        }
-      };
-    } catch (error) {
-      logger.error('Error generating fallback recommendations:', error);
-      throw error;
-    }
-  }
 
   /**
    * Generate two-part recommendations: from user playlists and global recommendations

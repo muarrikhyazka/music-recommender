@@ -264,59 +264,29 @@ const DashboardPage: React.FC = () => {
           } else {
             console.warn('No recommendations received:', recommendationData);
             setRecommendations([]);
-            setPlaylistName('Demo Playlist');
+            setPlaylistName('No Recommendations Available');
+            setError('No music recommendations available at this time. Please try again later.');
           }
         } catch (recommendationError) {
           console.error('Recommendations API failed:', recommendationError);
           
-          // If it's a 401 error, show a message about Spotify authentication
+          // Handle errors by showing appropriate messages - no demo data in production
           if (recommendationError.message.includes('401')) {
-            console.log('Authentication required - user may need to re-authenticate with Spotify');
+            console.log('Authentication required - user needs to authenticate with Spotify');
             setPlaylistName('Spotify Authentication Required');
-            setRecommendations([]);
+            setError('Please log in with your Spotify account to get personalized recommendations.');
+          } else if (recommendationError.message.includes('403')) {
+            setPlaylistName('Premium Required');
+            setError('Spotify Premium subscription required for full recommendations.');
+          } else if (recommendationError.message.includes('429')) {
+            setPlaylistName('Rate Limit Reached');
+            setError('Too many requests. Please try again in a few minutes.');
           } else {
-            // For other errors, show demo recommendations with two-part structure
-            console.log('Using demo recommendations due to API error');
-            setPlaylistName(`Demo Playlist - ${mappedContext.timeOfDay} vibes`);
-            
-            const demoRecommendations = [
-              { isSection: true, title: 'Discover New Music', id: 'global-section' },
-              {
-                id: 'demo1',
-                name: 'Blinding Lights',
-                artists: [{ name: 'The Weeknd', id: 'demo-artist1' }],
-                album: { 
-                  name: 'After Hours', 
-                  images: [{ 
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFEQjk1NCIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtSBUcmFjazwvdGV4dD48L3N2Zz4=' 
-                  }] 
-                },
-                uri: 'https://open.spotify.com/track/0VjIjW4GlUla35mVUg36Ow',
-                duration: 200040,
-                score: 0.95,
-                section: 'global',
-                reasons: [`Perfect for ${mappedContext.timeOfDay}`, `Matches ${mappedContext.weather.condition} weather`]
-              },
-              {
-                id: 'demo2',
-                name: 'Good as Hell',
-                artists: [{ name: 'Lizzo', id: 'demo-artist2' }],
-                album: { 
-                  name: 'Cuz I Love You', 
-                  images: [{ 
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzYzNjZmMSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+OtiBUcmFjazwvdGV4dD48L3N2Zz4=' 
-                  }] 
-                },
-                uri: 'https://open.spotify.com/track/4jAIqgrPjKLTY9Gbez25Qb',
-                duration: 219466,
-                score: 0.88,
-                section: 'global',
-                reasons: [`${mappedContext.geoLocation.city} weather`, 'Time-based selection']
-              }
-            ];
-            
-            setRecommendations(demoRecommendations);
+            setPlaylistName('Service Unavailable');
+            setError('Music recommendation service is temporarily unavailable. Please try again later.');
           }
+          
+          setRecommendations([]);
         }
 
       } catch (err) {
