@@ -130,29 +130,58 @@ const DashboardPage: React.FC = () => {
             season: contextData.season || 'spring'
           };
         } catch (contextError) {
-          console.error('Context API failed, using fallback data:', contextError);
+          console.error('Context API failed, trying without location:', contextError);
           
-          // Use fallback context data
-          mappedContext = {
-            timestamp: new Date().toISOString(),
-            timeOfDay: 'afternoon',
-            geoLocation: {
-              city: 'Your City',
-              country: 'Your Country',
-              region: '',
-              coordinates: {
-                lat: userLocation?.latitude || 0,
-                lng: userLocation?.longitude || 0
-              }
-            },
-            weather: {
-              condition: 'sunny',
-              temperature: 22,
-              humidity: 50,
-              description: 'Pleasant weather'
-            },
-            season: 'spring'
-          };
+          // Try getting context without specific location (will use IP)
+          try {
+            contextData = await apiService.getCurrentContext();
+            console.log('Context API response (IP-based):', contextData);
+            
+            mappedContext = {
+              timestamp: contextData.timestamp || new Date().toISOString(),
+              timeOfDay: contextData.timeOfDay || 'afternoon',
+              geoLocation: {
+                city: contextData.location?.city || 'Your City',
+                country: contextData.location?.country || 'Your Country',
+                region: contextData.location?.region,
+                coordinates: {
+                  lat: 0,
+                  lng: 0
+                }
+              },
+              weather: contextData.weather || {
+                condition: 'sunny',
+                temperature: 22,
+                humidity: 50,
+                description: 'Pleasant weather'
+              },
+              season: contextData.season || 'spring'
+            };
+          } catch (fallbackError) {
+            console.error('Both context API calls failed, using fallback:', fallbackError);
+            
+            // Final fallback
+            mappedContext = {
+              timestamp: new Date().toISOString(),
+              timeOfDay: 'afternoon',
+              geoLocation: {
+                city: 'Your City',
+                country: 'Your Country',
+                region: '',
+                coordinates: {
+                  lat: 0,
+                  lng: 0
+                }
+              },
+              weather: {
+                condition: 'sunny',
+                temperature: 22,
+                humidity: 50,
+                description: 'Pleasant weather'
+              },
+              season: 'spring'
+            };
+          }
         }
         
         setContext(mappedContext);
@@ -223,56 +252,56 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 py-8">
       <div className="max-w-6xl mx-auto px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Munder Dashboard</h1>
-        <p className="text-gray-600">Your personalized music recommendations</p>
+        <h1 className="text-3xl font-bold text-white mb-2">🎵 Munder Dashboard</h1>
+        <p className="text-gray-300">Your personalized music recommendations</p>
       </div>
 
       {context && (
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Location Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-white">
               📍 Location
             </h3>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-white">
               {context.geoLocation.city}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-300">
               {context.geoLocation.region && `${context.geoLocation.region}, `}
               {context.geoLocation.country}
             </p>
           </div>
 
           {/* Weather Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-white">
               {getWeatherEmoji(context.weather.condition)} Weather
             </h3>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-white">
               {context.weather.temperature}°C
             </p>
-            <p className="text-sm text-gray-600 capitalize">
+            <p className="text-sm text-gray-300 capitalize">
               {context.weather.description || context.weather.condition}
             </p>
             {context.weather.feelsLike && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-400">
                 Feels like {context.weather.feelsLike}°C
               </p>
             )}
           </div>
 
           {/* Time Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-white">
               {getTimeEmoji(context.timeOfDay)} Time
             </h3>
-            <p className="text-2xl font-bold text-gray-900 capitalize">
+            <p className="text-2xl font-bold text-white capitalize">
               {context.timeOfDay}
             </p>
-            <p className="text-sm text-gray-600 capitalize">
+            <p className="text-sm text-gray-300 capitalize">
               {context.season} season
             </p>
           </div>
@@ -280,13 +309,13 @@ const DashboardPage: React.FC = () => {
       )}
 
       {/* Recommendations Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-white">
               🎵 {playlistName || 'Your Recommendations'}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               {recommendations.length} songs curated for your current mood and environment
             </p>
           </div>
@@ -295,8 +324,8 @@ const DashboardPage: React.FC = () => {
         {recommendations.length > 0 ? (
           <div className="space-y-4">
             {recommendations.map((track, index) => (
-              <div key={track.id} className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="text-gray-500 font-mono text-sm w-8">
+              <div key={track.id} className="flex items-center space-x-4 p-4 hover:bg-white/5 rounded-lg transition-colors">
+                <div className="text-gray-400 font-mono text-sm w-8">
                   {(index + 1).toString().padStart(2, '0')}
                 </div>
                 
@@ -309,12 +338,12 @@ const DashboardPage: React.FC = () => {
                 )}
                 
                 <div className="flex-grow">
-                  <h3 className="font-semibold text-gray-900">{track.name}</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="font-semibold text-white">{track.name}</h3>
+                  <p className="text-sm text-gray-300">
                     {track.artists.map(artist => artist.name).join(', ')}
                   </p>
                   {track.reasons && track.reasons.length > 0 && (
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className="text-xs text-blue-400 mt-1">
                       {track.reasons.join(', ')}
                     </p>
                   )}
@@ -322,12 +351,12 @@ const DashboardPage: React.FC = () => {
                 
                 <div className="text-right">
                   {track.duration && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                       {formatDuration(track.duration)}
                     </p>
                   )}
                   {track.score && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-green-400">
                       {Math.round(track.score * 100)}% match
                     </p>
                   )}
@@ -348,7 +377,7 @@ const DashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500">No recommendations available</p>
+            <p className="text-gray-400">No recommendations available</p>
           </div>
         )}
       </div>
