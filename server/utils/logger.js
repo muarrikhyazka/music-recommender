@@ -1,5 +1,6 @@
 const winston = require('winston');
 const path = require('path');
+const KafkaTransport = require('./kafkaTransport');
 
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -22,6 +23,13 @@ const logger = winston.createLogger({
         winston.format.colorize(),
         winston.format.simple()
       )
+    }),
+    // Kafka transport for log monitoring
+    new KafkaTransport({
+      level: 'info',
+      serviceName: 'music-recommender',
+      brokers: (process.env.KAFKA_BOOTSTRAP_SERVERS || 'localhost:9092').split(','),
+      topic: 'logs'
     })
   ]
 });
